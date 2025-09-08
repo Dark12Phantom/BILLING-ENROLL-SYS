@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 06, 2025 at 02:54 PM
+-- Generation Time: Sep 08, 2025 at 05:23 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -35,7 +35,7 @@ CREATE TABLE `compliance_expenses` (
   `reference_number` varchar(100) DEFAULT NULL,
   `period_covered` varchar(100) DEFAULT NULL,
   `paid_by` int(11) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `compliance_expenses`
@@ -43,6 +43,20 @@ CREATE TABLE `compliance_expenses` (
 
 INSERT INTO `compliance_expenses` (`id`, `type`, `amount`, `payment_date`, `reference_number`, `period_covered`, `paid_by`) VALUES
 (1, 'SSS', 300.00, '2025-08-04', '9876543456765', 'dasd', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `discounts`
+--
+
+CREATE TABLE `discounts` (
+  `id` int(11) NOT NULL,
+  `discount_types` text NOT NULL,
+  `total_amount` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `fees_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -57,14 +71,14 @@ CREATE TABLE `fees` (
   `amount` decimal(10,2) NOT NULL,
   `is_recurring` tinyint(1) DEFAULT 0,
   `frequency` enum('One-time','Monthly','Quarterly','Annual') DEFAULT 'One-time'
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `fees`
 --
 
 INSERT INTO `fees` (`id`, `name`, `description`, `amount`, `is_recurring`, `frequency`) VALUES
-(1, 'Tuition Fee', 'Sample Description', 5000.00, 1, 'Monthly');
+(1, 'Tuition Fee', 'Sample description', 5000.00, 1, 'Monthly');
 
 -- --------------------------------------------------------
 
@@ -80,7 +94,7 @@ CREATE TABLE `operational_expenses` (
   `evidence` varchar(255) DEFAULT NULL,
   `date_incurred` date NOT NULL,
   `approved_by` int(11) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `operational_expenses`
@@ -105,7 +119,7 @@ CREATE TABLE `parents` (
   `email` varchar(100) DEFAULT NULL,
   `address` text DEFAULT NULL,
   `idParentPicturePath` text NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `parents`
@@ -128,14 +142,15 @@ CREATE TABLE `payments` (
   `payment_method` varchar(50) NOT NULL,
   `reference_number` varchar(100) DEFAULT NULL,
   `received_by` int(11) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `payments`
 --
 
 INSERT INTO `payments` (`id`, `student_id`, `amount`, `payment_date`, `payment_method`, `reference_number`, `received_by`) VALUES
-(1, 1, 1000.00, '2025-08-04', 'Cash', '5645364575454', 1);
+(1, 1, 1000.00, '2025-08-04', 'Cash', '5645364575454', 1),
+(2, 1, 333.33, '2025-09-08', 'Cash', 'REF-20250908161731365', 1);
 
 -- --------------------------------------------------------
 
@@ -148,14 +163,15 @@ CREATE TABLE `payment_items` (
   `payment_id` int(11) NOT NULL,
   `student_fee_id` int(11) NOT NULL,
   `amount` decimal(10,2) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `payment_items`
 --
 
 INSERT INTO `payment_items` (`id`, `payment_id`, `student_fee_id`, `amount`) VALUES
-(1, 1, 1, 1000.00);
+(1, 1, 1, 1000.00),
+(2, 2, 2, 333.33);
 
 -- --------------------------------------------------------
 
@@ -177,7 +193,7 @@ CREATE TABLE `students` (
   `status` enum('Active','Inactive','Graduated') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `idPicturePath` text NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `students`
@@ -199,14 +215,26 @@ CREATE TABLE `student_fees` (
   `due_date` date NOT NULL,
   `status` enum('Pending','Paid','Overdue') DEFAULT 'Pending',
   `amount` decimal(10,2) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `student_fees`
 --
 
 INSERT INTO `student_fees` (`id`, `student_id`, `fee_id`, `due_date`, `status`, `amount`) VALUES
-(1, 1, 1, '2025-08-04', 'Paid', 1000.00);
+(1, 1, 1, '2025-08-04', 'Paid', 1000.00),
+(2, 1, 1, '2025-09-08', 'Paid', 333.33),
+(3, 1, 1, '2025-10-08', 'Pending', 333.33),
+(4, 1, 1, '2025-11-08', 'Pending', 333.33),
+(5, 1, 1, '2025-12-08', 'Pending', 333.33),
+(6, 1, 1, '2026-01-08', 'Pending', 333.33),
+(7, 1, 1, '2026-02-08', 'Pending', 333.33),
+(8, 1, 1, '2026-03-08', 'Pending', 333.33),
+(9, 1, 1, '2026-04-08', 'Pending', 333.33),
+(10, 1, 1, '2026-05-08', 'Pending', 333.33),
+(11, 1, 1, '2026-06-08', 'Pending', 333.33),
+(12, 1, 1, '2026-07-08', 'Pending', 333.33),
+(13, 1, 1, '2026-08-08', 'Pending', 333.37);
 
 -- --------------------------------------------------------
 
@@ -221,14 +249,14 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `role` enum('admin','staff') DEFAULT 'staff',
   `created_at` timestamp NULL DEFAULT current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `users`
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `created_at`) VALUES
-(1, 'admin', 'admin@school.edu', '$2y$10$lXoJ3qlW2BcuiNnrA2VVxOuWmVozq39V3wu3YE28B6yi8QhQRn65y', 'admin', '2025-08-04 05:02:49');
+(1, 'admin', 'admin@school.edu', '$2y$10$c9/A3vnd9BvYwr6ALRcjhO4LvYZmRdsNc.PGsGxYZxyu5cEHxbQKG', 'admin', '2025-08-04 05:02:49');
 
 --
 -- Indexes for dumped tables
@@ -240,6 +268,15 @@ INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `created_at`
 ALTER TABLE `compliance_expenses`
   ADD PRIMARY KEY (`id`),
   ADD KEY `paid_by` (`paid_by`);
+
+--
+-- Indexes for table `discounts`
+--
+ALTER TABLE `discounts`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `id` (`id`),
+  ADD KEY `fees_id` (`fees_id`),
+  ADD KEY `student_id` (`student_id`);
 
 --
 -- Indexes for table `fees`
@@ -312,6 +349,12 @@ ALTER TABLE `compliance_expenses`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `discounts`
+--
+ALTER TABLE `discounts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `fees`
 --
 ALTER TABLE `fees`
@@ -333,13 +376,13 @@ ALTER TABLE `parents`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `payment_items`
 --
 ALTER TABLE `payment_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `students`
@@ -351,13 +394,63 @@ ALTER TABLE `students`
 -- AUTO_INCREMENT for table `student_fees`
 --
 ALTER TABLE `student_fees`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `compliance_expenses`
+--
+ALTER TABLE `compliance_expenses`
+  ADD CONSTRAINT `compliance_expenses_ibfk_1` FOREIGN KEY (`paid_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `discounts`
+--
+ALTER TABLE `discounts`
+  ADD CONSTRAINT `discounts_ibfk_1` FOREIGN KEY (`fees_id`) REFERENCES `fees` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `discounts_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `operational_expenses`
+--
+ALTER TABLE `operational_expenses`
+  ADD CONSTRAINT `operational_expenses_ibfk_1` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `parents`
+--
+ALTER TABLE `parents`
+  ADD CONSTRAINT `parents_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `payments`
+--
+ALTER TABLE `payments`
+  ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `payments_ibfk_2` FOREIGN KEY (`received_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `payment_items`
+--
+ALTER TABLE `payment_items`
+  ADD CONSTRAINT `payment_items_ibfk_1` FOREIGN KEY (`payment_id`) REFERENCES `payments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `payment_items_ibfk_2` FOREIGN KEY (`student_fee_id`) REFERENCES `student_fees` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `student_fees`
+--
+ALTER TABLE `student_fees`
+  ADD CONSTRAINT `student_fees_ibfk_1` FOREIGN KEY (`fee_id`) REFERENCES `fees` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `student_fees_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
