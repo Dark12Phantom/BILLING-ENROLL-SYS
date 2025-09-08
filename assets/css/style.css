@@ -1,0 +1,98 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.table th {
+    background-color: #f1f5f9;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn {
+    border-radius: 5px;
+    padding: 8px 16px;
+}
+
+.form-control, .form-select {
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 6px 10px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.card-dashboard {
+    transition: transform 0.3s;
+}
+
+.card-dashboard:hover {
+    transform: translateY(-5px);
+}
+
+.bg-light-blue {
+    background-color: #e3f2fd;
+}
+
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --light-bg: #f8f9fa;
+    --dark-bg: #343a40;
+}
+
+.table {
+    background-color: white;
+}
+
+.table th {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.sidebar {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.sidebar .nav-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
