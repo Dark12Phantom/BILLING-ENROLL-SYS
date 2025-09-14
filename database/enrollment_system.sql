@@ -1,9 +1,9 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Sep 08, 2025 at 05:23 PM
+-- Host: localhost
+-- Generation Time: Sep 14, 2025 at 10:28 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -57,6 +57,13 @@ CREATE TABLE `discounts` (
   `student_id` int(11) NOT NULL,
   `fees_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `discounts`
+--
+
+INSERT INTO `discounts` (`id`, `discount_types`, `total_amount`, `student_id`, `fees_id`) VALUES
+(1, '[\"referral\",\"earlybird\",\"sibling\",\"fullpayment\"]', 2500, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -141,16 +148,8 @@ CREATE TABLE `payments` (
   `payment_date` date NOT NULL,
   `payment_method` varchar(50) NOT NULL,
   `reference_number` varchar(100) DEFAULT NULL,
-  `received_by` int(11) NOT NULL
+  `received_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `payments`
---
-
-INSERT INTO `payments` (`id`, `student_id`, `amount`, `payment_date`, `payment_method`, `reference_number`, `received_by`) VALUES
-(1, 1, 1000.00, '2025-08-04', 'Cash', '5645364575454', 1),
-(2, 1, 333.33, '2025-09-08', 'Cash', 'REF-20250908161731365', 1);
 
 -- --------------------------------------------------------
 
@@ -164,14 +163,6 @@ CREATE TABLE `payment_items` (
   `student_fee_id` int(11) NOT NULL,
   `amount` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `payment_items`
---
-
-INSERT INTO `payment_items` (`id`, `payment_id`, `student_fee_id`, `amount`) VALUES
-(1, 1, 1, 1000.00),
-(2, 2, 2, 333.33);
 
 -- --------------------------------------------------------
 
@@ -222,19 +213,18 @@ CREATE TABLE `student_fees` (
 --
 
 INSERT INTO `student_fees` (`id`, `student_id`, `fee_id`, `due_date`, `status`, `amount`) VALUES
-(1, 1, 1, '2025-08-04', 'Paid', 1000.00),
-(2, 1, 1, '2025-09-08', 'Paid', 333.33),
-(3, 1, 1, '2025-10-08', 'Pending', 333.33),
-(4, 1, 1, '2025-11-08', 'Pending', 333.33),
-(5, 1, 1, '2025-12-08', 'Pending', 333.33),
-(6, 1, 1, '2026-01-08', 'Pending', 333.33),
-(7, 1, 1, '2026-02-08', 'Pending', 333.33),
-(8, 1, 1, '2026-03-08', 'Pending', 333.33),
-(9, 1, 1, '2026-04-08', 'Pending', 333.33),
-(10, 1, 1, '2026-05-08', 'Pending', 333.33),
-(11, 1, 1, '2026-06-08', 'Pending', 333.33),
-(12, 1, 1, '2026-07-08', 'Pending', 333.33),
-(13, 1, 1, '2026-08-08', 'Pending', 333.37);
+(14, 1, 1, '2025-09-08', 'Pending', 208.33),
+(15, 1, 1, '2025-10-08', 'Pending', 208.33),
+(16, 1, 1, '2025-11-08', 'Pending', 208.33),
+(17, 1, 1, '2025-12-08', 'Pending', 208.33),
+(18, 1, 1, '2026-01-08', 'Pending', 208.33),
+(19, 1, 1, '2026-02-08', 'Pending', 208.33),
+(20, 1, 1, '2026-03-08', 'Pending', 208.33),
+(21, 1, 1, '2026-04-08', 'Pending', 208.33),
+(22, 1, 1, '2026-05-08', 'Pending', 208.33),
+(23, 1, 1, '2026-06-08', 'Pending', 208.33),
+(24, 1, 1, '2026-07-08', 'Pending', 208.33),
+(25, 1, 1, '2026-08-08', 'Pending', 208.37);
 
 -- --------------------------------------------------------
 
@@ -248,15 +238,45 @@ CREATE TABLE `users` (
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('admin','staff') DEFAULT 'staff',
-  `created_at` timestamp NULL DEFAULT current_timestamp()
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `last_login` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `created_at`) VALUES
-(1, 'admin', 'admin@school.edu', '$2y$10$c9/A3vnd9BvYwr6ALRcjhO4LvYZmRdsNc.PGsGxYZxyu5cEHxbQKG', 'admin', '2025-08-04 05:02:49');
+INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `created_at`, `last_login`) VALUES
+(1, 'admin', 'admin@school.edu', '$2y$10$c9/A3vnd9BvYwr6ALRcjhO4LvYZmRdsNc.PGsGxYZxyu5cEHxbQKG', 'admin', '2025-08-04 05:02:49', '2025-09-14 16:04:32');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_tables`
+--
+
+CREATE TABLE `user_tables` (
+  `id` int(11) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `first_name` text NOT NULL,
+  `last_name` text NOT NULL,
+  `staff_id` int(11) NOT NULL,
+  `user_type` text NOT NULL,
+  `status` text NOT NULL,
+  `age` int(11) NOT NULL,
+  `gender` text NOT NULL,
+  `address` text NOT NULL,
+  `mobile_number` varchar(11) NOT NULL,
+  `date_of_birth` date NOT NULL,
+  `idPicturePath` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_tables`
+--
+
+INSERT INTO `user_tables` (`id`, `userID`, `first_name`, `last_name`, `staff_id`, `user_type`, `status`, `age`, `gender`, `address`, `mobile_number`, `date_of_birth`, `idPicturePath`) VALUES
+(1, 1, 'School', 'Admin', 1234565, 'admin', 'Active', 0, 'Male', 'Ed Sidi, Asi Ed Sina, Paeey Sidi', '09123456789', '1987-06-10', '');
 
 --
 -- Indexes for dumped tables
@@ -339,6 +359,13 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Indexes for table `user_tables`
+--
+ALTER TABLE `user_tables`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `userID` (`userID`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -352,7 +379,7 @@ ALTER TABLE `compliance_expenses`
 -- AUTO_INCREMENT for table `discounts`
 --
 ALTER TABLE `discounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `fees`
@@ -376,13 +403,13 @@ ALTER TABLE `parents`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `payment_items`
 --
 ALTER TABLE `payment_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `students`
@@ -394,13 +421,19 @@ ALTER TABLE `students`
 -- AUTO_INCREMENT for table `student_fees`
 --
 ALTER TABLE `student_fees`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `user_tables`
+--
+ALTER TABLE `user_tables`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- Constraints for dumped tables
@@ -436,7 +469,7 @@ ALTER TABLE `parents`
 --
 ALTER TABLE `payments`
   ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `payments_ibfk_2` FOREIGN KEY (`received_by`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `payments_ibfk_2` FOREIGN KEY (`received_by`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE SET NULL;
 
 --
 -- Constraints for table `payment_items`
@@ -451,6 +484,12 @@ ALTER TABLE `payment_items`
 ALTER TABLE `student_fees`
   ADD CONSTRAINT `student_fees_ibfk_1` FOREIGN KEY (`fee_id`) REFERENCES `fees` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `student_fees_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `students` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `user_tables`
+--
+ALTER TABLE `user_tables`
+  ADD CONSTRAINT `user_tables_ibfk_1` FOREIGN KEY (`userID`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

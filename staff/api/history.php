@@ -1,6 +1,6 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/db.php';
+require_once '../includes/staff-auth.php';
+require_once '../includes/database.php';
 
 protectPage();
 
@@ -46,7 +46,7 @@ $students = $pdo->query("SELECT id, first_name, last_name, student_id FROM stude
 $totalQuery = "SELECT SUM(amount) FROM payments";
 $totalAmount = $pdo->query($totalQuery)->fetchColumn();
 
-require_once '../../includes/header.php';
+require_once '../includes/staff-header.php';
 ?>
 
 <div class="container-fluid">
@@ -66,26 +66,26 @@ require_once '../../includes/header.php';
                 <div class="col-md-6">
                     <form class="form-inline float-end">
                         <div class="input-group">
-                            <input type="text" class="form-control" name="search" placeholder="Search..."
-                                value="<?= htmlspecialchars($search) ?>">
+                            <input type="text" class="form-control" name="search" placeholder="Search..." 
+                                   value="<?= htmlspecialchars($search) ?>">
                             <select class="form-select ms-2" name="student_id" style="width: 180px;">
                                 <option value="">All Students</option>
                                 <?php foreach ($students as $student): ?>
-                                    <option value="<?= $student['id'] ?>"
+                                    <option value="<?= $student['id'] ?>" 
                                         <?= $studentId == $student['id'] ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($student['last_name']) ?>, <?= htmlspecialchars($student['first_name']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <input type="date" class="form-control ms-2" name="start_date"
-                                value="<?= htmlspecialchars($startDate) ?>" placeholder="From Date">
+                            <input type="date" class="form-control ms-2" name="start_date" 
+                                   value="<?= htmlspecialchars($startDate) ?>" placeholder="From Date">
                             <button type="submit" class="btn btn-primary ms-2">Filter</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-
+        
         <div class="card-body">
             <?php if (!empty($startDate) || !empty($endDate)): ?>
                 <div class="alert alert-info mb-3">
@@ -94,7 +94,7 @@ require_once '../../includes/header.php';
                     <a href="index.php" class="float-end">Clear filters</a>
                 </div>
             <?php endif; ?>
-
+            
             <div class="table-responsive">
                 <table class="table table-bordered" width="100%" cellspacing="0">
                     <thead class="thead-light">
@@ -147,17 +147,15 @@ require_once '../../includes/header.php';
                 </table>
             </div>
         </div>
-
+        
         <div class="card-footer">
             <div class="row">
                 <div class="col-md-6">
-                    <strong>System Total:</strong> ₱<?= number_format($totalAmount ?? 0, 2) ?>
-
+                    <strong>System Total:</strong> ₱<?= number_format($totalAmount, 2) ?>
                 </div>
             </div>
         </div>
     </div>
 </div>
-</div>
 
-<?php require '../../includes/footer.php'; ?>
+<?php require_once '../includes/staff-footer.php'; ?>

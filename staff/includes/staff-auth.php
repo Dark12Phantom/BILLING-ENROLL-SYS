@@ -1,13 +1,11 @@
 <?php
-require_once 'db.php';
+require_once 'database.php';
 
-// Check if user is logged in
-function isLoggedIn()
+function isLoggedInStaff()
 {
     return isset($_SESSION['user_id']);
 }
 
-// Login function
 function login($username, $password)
 {
     global $pdo;
@@ -26,17 +24,15 @@ function login($username, $password)
     return false;
 }
 
-// Logout function
 function logout()
 {
     session_unset();
     session_destroy();
 }
 
-// Protect page
 function protectPage()
 {
-    if (!isLoggedIn()) {
+    if (!isLoggedInStaff()) {
         header("Location: ../login.php");
         exit();
     }

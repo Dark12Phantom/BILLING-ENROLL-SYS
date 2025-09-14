@@ -1,6 +1,6 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/db.php';
+require_once '../includes/staff-auth.php';
+require_once '../includes/database.php';
 
 protectPage();
 
@@ -317,6 +317,7 @@ $schoolContact = "Phone: 287324098 | Email: admission@mca-manila.edu.ph";
                     </div>
                 </div>
 
+
                 <div class="col-md-6">
                     <?php if (!empty($unpaidFees)): ?>
                         <div class="card">
@@ -356,6 +357,7 @@ $schoolContact = "Phone: 287324098 | Email: admission@mca-manila.edu.ph";
                             </div>
                         </div>
                     <?php endif; ?>
+
                     <br>
                     <div class="col-md-12">
                         <p>Received By: ______________________________</p>
@@ -396,7 +398,7 @@ $schoolContact = "Phone: 287324098 | Email: admission@mca-manila.edu.ph";
                     <button onclick="window.print()" class="print-button me-2">
                         <i class="fas fa-print me-1"></i> Print Receipt
                     </button>
-                    <a href="index.php" class="btn btn-secondary">
+                    <a href="../htmls/index.php" class="btn btn-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Back to Payments
                     </a>
                 </div>

@@ -1,5 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
+require_once '../includes/staff-auth.php';
 protectPage();
 
 if (!isset($_GET['student_id'])) {
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-require_once '../../includes/header.php';
+require_once '../includes/staff-header.php';
 ?>
 
 <div class="row">
@@ -170,13 +170,13 @@ require_once '../../includes/header.php';
                         </div>
 
                         <div class="text-end">
-                            <a href="../view.php?id=<?= $studentId ?>>cancel=1" class="btn btn-secondary">Cancel</a>
+                            <a href="../htmls/view.php?id=<?= $studentId ?>>cancel=1" class="btn btn-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Process Payment</button>
                         </div>
                     <?php else: ?>
                         <div class="alert alert-info">No pending fees for this student.</div>
                         <div class="text-end">
-                            <a href="../view.php?id=<?= $studentId ?>" class="btn btn-secondary">Back</a>
+                            <a href="../htmls/view.php?id=<?= $studentId ?>" class="btn btn-secondary">Back</a>
                         </div>
                     <?php endif; ?>
                 </form>

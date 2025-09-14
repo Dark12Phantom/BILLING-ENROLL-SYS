@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,37 +18,37 @@
             --light-bg: #f8f9fa;
             --dark-bg: #343a40;
         }
-        
+
         body {
             background-color: var(--light-bg);
-            background-image: linear-gradient(
-                to bottom,
-                rgba(52, 152, 219, 0.1),
-                rgba(52, 152, 219, 0.05)
-            );
+            background-image: linear-gradient(to bottom,
+                    rgba(52, 152, 219, 0.1),
+                    rgba(52, 152, 219, 0.05));
             min-height: 100vh;
         }
-        
+
         .card {
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border: none;
         }
-        
+
         .navbar {
             background-color: var(--secondary-color) !important;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
+
         .bg-primary {
             background-color: var(--primary-color) !important;
         }
-        
+
         .btn-primary {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
         }
     </style>
+</head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
@@ -56,39 +57,51 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-            <!-- In your header.php file, update the navigation links like this: -->
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/BILLING-ENROLL-SYS/admin/dashboard.php">Home</a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="studentDropdown" role="button" data-bs-toggle="dropdown">
-                        Student Record
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/index.php">Student List</a></li>
-                        <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/add.php">Add Student</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="billingDropdown" role="button" data-bs-toggle="dropdown">
-                        Billing & Payment
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/billing/index.php">Payment History</a></li>
-                        <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/billing/fees.php">Fee Management</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="expenseDropdown" role="button" data-bs-toggle="dropdown">
-                        Operational Expenses
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/expenses/operational.php">Expense Tracking</a></li>
-                        <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/expenses/compliance.php">Compliance</a></li>
-                    </ul>
-                </li>
-            </ul>
+                
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/BILLING-ENROLL-SYS/admin/dashboard.php">Home</a>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="studentDropdown" role="button" data-bs-toggle="dropdown">
+                            User Management
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/users/index.php">User List</a></li>
+                            <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/users/add.php">Add User</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="studentDropdown" role="button" data-bs-toggle="dropdown">
+                            Student Record
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/index.php">Student List</a></li>
+                            <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/add.php">Add Student</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="billingDropdown" role="button" data-bs-toggle="dropdown">
+                            Billing & Payment
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/billing/index.php">Payment History</a></li>
+                            <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/billing/fees.php">Fee Management</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="expenseDropdown" role="button" data-bs-toggle="dropdown">
+                            Operational Expenses
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/expenses/operational.php">Expense Tracking</a></li>
+                            <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/expenses/compliance.php">Compliance</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <a class="nav-link" href="#"><i class="fas fa-user me-1"></i> <?php echo $_SESSION['username']; ?></a>

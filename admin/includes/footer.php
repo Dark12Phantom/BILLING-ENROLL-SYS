@@ -1,5 +1,5 @@
     </div> <!-- Close container div -->
-    <br><br><br><br>
+        <br><br><br><br>
     <!-- Add a subtle footer with theme colors -->
     <footer class="mt-5 py-3" style="background-color: var(--secondary-color); color: white;">
         <div class="container text-center">

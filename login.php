@@ -3,8 +3,13 @@ require_once 'includes/config.php';
 require_once 'includes/auth.php';
 
 if (isLoggedIn()) {
-    header("Location: admin/dashboard.php");
-    exit();
+    if ($_SESSION['role'] === 'admin') {
+        header("Location: admin/dashboard.php");
+        exit();
+    } elseif ($_SESSION['role'] === 'staff') {
+        header("Location: staff/dashboard.php");
+        exit();
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -12,8 +17,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'];
 
     if (login($username, $password)) {
-        header("Location: admin/dashboard.php");
-        exit();
+        $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE username = :username");
+        $stmt->execute(['username' => $username]);
+        
+        if ($_SESSION['role'] === 'admin') {
+            header("Location: admin/dashboard.php");
+            exit();
+        } elseif ($_SESSION['role'] === 'staff') {
+            header("Location: staff/dashboard.php");
+            exit();
+        } else {
+            $error = "Role not recognized.";
+        }
     } else {
         $error = "Invalid username or password";
     }
