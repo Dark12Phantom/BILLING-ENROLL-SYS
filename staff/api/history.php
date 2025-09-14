@@ -151,7 +151,7 @@ require_once '../includes/staff-header.php';
         <div class="card-footer">
             <div class="row">
                 <div class="col-md-6">
-                    <strong>System Total:</strong> ₱<?= number_format($totalAmount, 2) ?>
+                    <strong>System Total:</strong> ₱<?= number_format($totalAmount ?? 0, 2) ?>
                 </div>
             </div>
         </div>

@@ -36,6 +36,7 @@ $students = $stmt->fetchAll();
                             <div class="input-group">
                                 <input type="text" class="form-control" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>">
                                 <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+                                <a href="add.php" class="btn btn-success ms-2"><i class="fas fa-plus"></i> Add Student</a>
                             </div>
                         </form>
                     </div>

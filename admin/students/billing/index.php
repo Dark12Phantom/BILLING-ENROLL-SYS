@@ -152,7 +152,6 @@ require_once '../../includes/header.php';
             <div class="row">
                 <div class="col-md-6">
                     <strong>System Total:</strong> ₱<?= number_format($totalAmount ?? 0, 2) ?>
-
                 </div>
             </div>
         </div>

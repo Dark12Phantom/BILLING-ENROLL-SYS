@@ -28,6 +28,12 @@ require_once '../includes/staff-header.php';
                             <div class="col-md-6">
                                 <h5>Assigned Fees</h5>
                             </div>
+
+                            <div class="col-md-6 text-end">
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignFeeModal">
+                                    <i class="fas fa-plus"></i> Assign Fee
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
@@ -40,6 +46,7 @@ require_once '../includes/staff-header.php';
                                         <th>Amount</th>
                                         <th>Due Date</th>
                                         <th>Status</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -55,6 +62,13 @@ require_once '../includes/staff-header.php';
                                                                         ?>">
                                                     <?= htmlspecialchars($fee['status']) ?>
                                                 </span>
+                                            </td>
+
+                                            <td>
+                                                <a href="edit-assigned-fee.php?id=<?= $fee['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
+                                                <a href="delete-assigned-fee.php?id=<?= $fee['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
