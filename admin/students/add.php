@@ -188,7 +188,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                                 <div class="mb-3">
                                     <label for="grade_level" class="form-label">Grade Level</label>
-                                    <input type="text" class="form-control" id="grade_level" name="grade_level" required>
+                                    <select class="form-select" id="grade_level" name="grade_level" required>
+                                        <option value="" disabled selected> Select Grade Level </option>
+                                        <option value="Kindergarten">Kindergarten</option>
+                                        <option value="Grade 1">Grade 1</option>
+                                        <option value="Grade 2">Grade 2</option>
+                                        <option value="Grade 3">Grade 3</option>
+                                        <option value="Grade 4">Grade 4</option>
+                                        <option value="Grade 5">Grade 5</option>
+                                        <option value="Grade 6">Grade 6</option>
+                                    </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="section" class="form-label">Section</label>
