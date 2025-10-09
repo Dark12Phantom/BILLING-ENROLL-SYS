@@ -1,6 +1,6 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/db.php';
+require_once '../../../includes/auth.php';
+require_once '../../../includes/db.php';
 
 protectPage();
 
@@ -46,7 +46,7 @@ $students = $pdo->query("SELECT id, first_name, last_name, student_id FROM stude
 $totalQuery = "SELECT SUM(amount) FROM payments";
 $totalAmount = $pdo->query($totalQuery)->fetchColumn();
 
-require_once '../../includes/header.php';
+require_once '../../../includes/header.php';
 ?>
 
 <div class="container-fluid">
@@ -159,4 +159,4 @@ require_once '../../includes/header.php';
 </div>
 </div>
 
-<?php require '../../includes/footer.php'; ?>
+<?php require '../../../includes/footer.php'; ?>

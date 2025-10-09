@@ -1,5 +1,5 @@
 <?php
-require_once '../includes/db.php';
+require_once './includes/db.php';
 
 $success = '';
 $error = '';
@@ -182,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div class="card-body p-4">
                         <div class="logo-container animate__animated animate__bounceIn">
-                            <img src="../logo.jpg" alt="School Logo">
+                            <img src="./logo.jpg" alt="School Logo">
                         </div>
 
                         <?php if (!empty($error)): ?>
@@ -252,7 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </form>
                     </div>
                     <div class="card-footer text-center bg-light">
-                        <p class="mb-0 text-muted">Remember your login information? <a href="../login.php" class="back-to-login">Back to Login</a></p>
+                        <p class="mb-0 text-muted">Remember your login information? <a href="./login.php" class="back-to-login">Back to Login</a></p>
                     </div>
                 </div>
             </div>

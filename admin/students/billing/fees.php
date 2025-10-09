@@ -1,5 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
+require_once '../../../includes/auth.php';
 protectPage();
 
 $stmt = $pdo->query("SELECT * FROM fees ORDER BY name");
@@ -13,7 +13,7 @@ $query = "SELECT sf.*, f.name as fee_name, s.first_name, s.last_name, s.student_
 $stmt = $pdo->query($query);
 $studentFees = $stmt->fetchAll();
 
-require_once '../../includes/header.php';
+require_once '../../../includes/header.php';
 ?>
 
 <div class="row">
@@ -349,4 +349,4 @@ require_once '../../includes/header.php';
     });
 </script>
 
-<?php require_once '../../includes/footer.php'; ?>
+<?php require '../../../includes/footer.php'; ?>

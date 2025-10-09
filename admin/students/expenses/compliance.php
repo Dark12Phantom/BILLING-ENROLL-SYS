@@ -1,5 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
+require_once '../../../includes/auth.php';
 protectPage();
 
 // Fetch compliance expenses
@@ -15,7 +15,7 @@ $stmt = $pdo->query("SELECT type, SUM(amount) as total
                      GROUP BY type");
 $totals = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
-require_once '../../includes/header.php';
+require_once '../../../includes/header.php';
 ?>
 
 <div class="row">
@@ -147,4 +147,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php require_once '../../includes/footer.php'; ?>
+<?php require '../../../includes/footer.php'; ?>

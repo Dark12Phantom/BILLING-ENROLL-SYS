@@ -1,6 +1,6 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/db.php';
+require_once '../../../includes/auth.php';
+require_once '../../../includes/db.php';
 
 protectPage();
 
@@ -15,7 +15,7 @@ $expenses = $stmt->fetchAll();
 $stmt = $pdo->query("SELECT SUM(amount) FROM operational_expenses");
 $total = $stmt->fetchColumn();
 
-require_once '../../includes/header.php';
+require_once '../../../includes/header.php';
 ?>
 
 <div class="container-fluid">
@@ -162,4 +162,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php require_once '../../includes/footer.php'; ?>
+<?php require '../../../includes/footer.php'; ?>

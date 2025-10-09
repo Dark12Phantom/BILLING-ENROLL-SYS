@@ -2,15 +2,10 @@
 require_once 'includes/config.php';
 require_once 'includes/auth.php';
 
-if (isLoggedIn()) {
-    if ($_SESSION['role'] === 'admin') {
-        header("Location: admin/dashboard.php");
-        exit();
-    } elseif ($_SESSION['role'] === 'staff') {
-        header("Location: staff/dashboard.php");
-        exit();
-    }
-}
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+
+protectLoginPage();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
@@ -19,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (login($username, $password)) {
         $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE username = :username");
         $stmt->execute(['username' => $username]);
-        
+
         if ($_SESSION['role'] === 'admin') {
             header("Location: admin/dashboard.php");
             exit();
@@ -208,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </form>
                     </div>
                     <div class="card-footer text-center bg-light">
-                        <p class="mb-0 text-muted">Forgot Password? || <a href="admin/forgot-password.php" class="text-primary">Change Password</a></p>
+                        <p class="mb-0 text-muted">Forgot Password? || <a href="./forgot-password.php" class="text-primary">Change Password</a></p>
                     </div>
                 </div>
             </div>
@@ -233,7 +228,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
 
-        // Add animation to form inputs on focus
         document.querySelectorAll('.form-control').forEach(input => {
             input.addEventListener('focus', function() {
                 this.parentElement.parentElement.classList.add('animate__animated', 'animate__pulse');
@@ -242,6 +236,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             input.addEventListener('blur', function() {
                 this.parentElement.parentElement.classList.remove('animate__animated', 'animate__pulse');
             });
+        });
+
+        window.addEventListener("pageshow", function(event) {
+            if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
+                window.location.reload(true);
+            }
         });
     </script>
 </body>

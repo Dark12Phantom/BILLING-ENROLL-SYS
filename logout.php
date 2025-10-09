@@ -1,6 +1,6 @@
 <?php
-require_once 'includes/auth.php';
+require_once './includes/auth.php';
 logout();
-header("Location: login.php");
+header("Location: ./login.php");
 exit();
 ?>

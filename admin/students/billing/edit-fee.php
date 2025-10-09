@@ -1,6 +1,6 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/db.php';
+require_once '../../../includes/auth.php';
+require_once '../../../includes/db.php';
 
 protectPage();
 
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-require_once '../../includes/header.php';
+require_once '../../../includes/header.php';
 ?>
 
 <div class="row">
@@ -138,4 +138,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php require_once '../../includes/footer.php'; ?>
+<?php require '../../../includes/footer.php'; ?>

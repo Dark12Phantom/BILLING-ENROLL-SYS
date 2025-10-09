@@ -1,5 +1,5 @@
 <?php
-require_once '../../includes/auth.php';
+require_once '../../../includes/auth.php';
 protectPage();
 
 if (!isset($_GET['student_id'])) {
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-require_once '../../includes/header.php';
+require_once '../../../includes/header.php';
 ?>
 
 <div class="row">
@@ -222,4 +222,4 @@ require_once '../../includes/header.php';
     });
 </script>
 
-<?php require_once '../../includes/footer.php'; ?>
+<?php require '../../../includes/footer.php'; ?>

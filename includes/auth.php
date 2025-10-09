@@ -37,9 +37,14 @@ function logout()
     session_unset();
     if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $params["path"], $params["domain"],
-            $params["secure"], $params["httponly"]
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params["path"],
+            $params["domain"],
+            $params["secure"],
+            $params["httponly"]
         );
     }
     session_destroy();
@@ -49,10 +54,19 @@ function logout()
 function protectPage()
 {
     if (!isLoggedIn()) {
-        echo '<script>
-        window.location.replace("../login.php");
-    </script>
-    ';
+        header("Location: ../login.php");
         exit();
+    }
+}
+function protectLoginPage()
+{
+    if (isLoggedIn()) {
+        if ($_SESSION['role'] === 'admin') {
+            header("Location: admin/dashboard.php");
+            exit();
+        } elseif ($_SESSION['role'] === 'staff') {
+            header("Location: staff/dashboard.php");
+            exit();
+        }
     }
 }

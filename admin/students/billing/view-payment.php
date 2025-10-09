@@ -1,6 +1,6 @@
 <?php
-require_once '../../includes/auth.php';
-require_once '../../includes/db.php';
+require_once '../../../includes/auth.php';
+require_once '../../../includes/db.php';
 
 protectPage();
 
@@ -39,7 +39,7 @@ $paymentItems = $stmt->fetchAll();
 // Calculate total
 $total = array_sum(array_column($paymentItems, 'amount'));
 
-require_once '../../includes/header.php';
+require_once '../../../includes/header.php';
 ?>
 
 <div class="row">
@@ -182,4 +182,4 @@ require_once '../../includes/header.php';
 </div>
 <?php endif; ?>
 
-<?php require_once '../../includes/footer.php'; ?>
+<?php require '../../../includes/footer.php'; ?>

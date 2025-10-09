@@ -1,8 +1,7 @@
 <?php
-require_once '../../includes/auth.php';
+require_once '../../../includes/auth.php';
+require_once '../../../includes/db.php';
 protectPage();
-
-require_once '../../includes/header.php';
 
 // Get student ID from query string if exists
 $studentId = isset($_GET['student_id']) ? (int)$_GET['student_id'] : 0;
@@ -92,4 +91,4 @@ $students = $stmt->fetchAll();
     </div>
 </div>
 
-<?php require_once '../../includes/footer.php'; ?>
+<?php require '../../../includes/footer.php'; ?>
