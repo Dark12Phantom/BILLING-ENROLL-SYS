@@ -10,7 +10,10 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
+    <link href="../../../assets/css/style.css" rel="stylesheet">
+    <link href="../../assets/css/style.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
+    <link rel="icon" href="../logo.png" type="image/png">
     <style>
         :root {
             --primary-color: #3498db;
@@ -98,6 +101,7 @@
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/expenses/operational.php">Expense Tracking</a></li>
                             <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/expenses/compliance.php">Compliance</a></li>
+                            <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/expenses/auto.php">Auto-Billing</a></li>
                         </ul>
                     </li>
                 </ul>

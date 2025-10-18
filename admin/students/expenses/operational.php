@@ -40,7 +40,7 @@ require_once '../../../includes/header.php';
                         <tr>
                             <th>Date</th>
                             <th>Category</th>
-                            <th>Particular</th>
+                            <th>Description</th>
                             <th>Amount</th>
                             <th>Approved By</th>
                             <th>Evidence</th>
@@ -61,8 +61,8 @@ require_once '../../../includes/header.php';
                                     <td>₱<?= number_format($expense['amount'], 2) ?></td>
                                     <td><?= htmlspecialchars($expense['approved_by_name']) ?></td>
                                     <td>
-                                        <?php if (!empty($expense['evidence'])): ?>
-                                            <a href="../uploads/<?= htmlspecialchars($expense['evidence']) ?>" target="_blank" class="btn btn-sm btn-info">
+                                        <?php if (!empty($expense['id'])): ?>
+                                            <a href="./view-receipt.php?id=<?= htmlspecialchars($expense['id'])?>&type=operational" target="_blank" class="btn btn-sm btn-info">
                                                 View
                                             </a>
                                         <?php else: ?>
@@ -70,9 +70,6 @@ require_once '../../../includes/header.php';
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-warning edit-expense" data-id="<?= $expense['id'] ?>">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
                                         <a href="delete-expense.php?id=<?= $expense['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
                                             <i class="fas fa-trash"></i>
                                         </a>
@@ -84,7 +81,7 @@ require_once '../../../includes/header.php';
                     <tfoot>
                         <tr class="table-active">
                             <th colspan="3">Total Operational Expenses:</th>
-                            <th>₱<?= number_format($total, 2) ?></th>
+                            <th>₱<?= number_format($total ?? 0, 2) ?></th>
                             <th colspan="3"></th>
                         </tr>
                     </tfoot>
@@ -128,7 +125,7 @@ require_once '../../../includes/header.php';
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="particular" class="form-label">Particular</label>
+                        <label for="particular" class="form-label">Description</label>
                         <input type="text" class="form-control" id="particular" name="particular" required>
                     </div>
                     <div class="row">
@@ -155,10 +152,7 @@ require_once '../../../includes/header.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Set default date to today
     document.getElementById('date_incurred').valueAsDate = new Date();
-    
-    // Initialize any other JS functionality needed
 });
 </script>
 

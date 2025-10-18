@@ -71,9 +71,9 @@ $students = $stmt->fetchAll();
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="view.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
-                                        <a href="edit.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
-                                        <a href="delete.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
+                                        <a href="./view.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                                        <a href="./edit.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                                        <a href="./delete.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

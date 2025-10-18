@@ -158,6 +158,10 @@ require_once '../../../includes/header.php';
                         <textarea class="form-control" id="description" name="description" rows="2"></textarea>
                     </div>
                     <div class="mb-3">
+                        <label for="amount" class="form-label">Amount</label>
+                        <input type="number" min="1" max="100000" class="form-control" id="amount" name="amount" required>
+                    </div>
+                    <div class="mb-3">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="is_recurring" name="is_recurring">
                             <label class="form-check-label" for="is_recurring">Recurring Fee</label>
@@ -278,6 +282,12 @@ require_once '../../../includes/header.php';
         const originalAmountSpan = document.getElementById('original_amount');
         const discountAmountSpan = document.getElementById('discount_amount');
         const finalAmountSpan = document.getElementById('final_amount');
+        const checkbox = document.getElementById("is_recurring");
+        const frequencyContainer = document.getElementById("frequency-container");
+
+        checkbox.addEventListener("change", function() {
+            frequencyContainer.style.display = this.checked ? "block" : "none";
+        });
 
         let originalAmount = 0;
 

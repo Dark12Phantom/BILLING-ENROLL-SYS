@@ -22,7 +22,7 @@ require_once '../../../includes/header.php';
     <div class="col-md-12">
         <h2>Compliance Expenses</h2>
         <hr>
-        
+
         <div class="card mb-4">
             <div class="card-header">
                 <div class="row">
@@ -51,28 +51,35 @@ require_once '../../../includes/header.php';
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($expenses as $expense): ?>
+                            <?php if (empty($expenses)): ?>
                                 <tr>
-                                    <td><?= date('M d, Y', strtotime($expense['payment_date'])) ?></td>
-                                    <td><?= htmlspecialchars($expense['type']) ?></td>
-                                    <td>₱<?= number_format($expense['amount'], 2) ?></td>
-                                    <td><?= htmlspecialchars($expense['reference_number']) ?></td>
-                                    <td><?= htmlspecialchars($expense['period_covered']) ?></td>
-                                    <td><?= htmlspecialchars($expense['paid_by_name']) ?></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-warning edit-compliance" data-id="<?= $expense['id'] ?>">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <a href="delete-compliance.php?id=<?= $expense['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </td>
+                                    <td colspan="8" class="text-center py-4">No compliance expenses recorded yet</td>
                                 </tr>
-                            <?php endforeach; ?>
+                            <?php else: ?>
+                                <?php foreach ($expenses as $expense): ?>
+                                    <tr>
+                                        <td><?= date('M d, Y', strtotime($expense['payment_date'])) ?></td>
+                                        <td><?= htmlspecialchars($expense['type']) ?></td>
+                                        <td>₱<?= number_format($expense['amount'], 2) ?></td>
+                                        <td><?= htmlspecialchars($expense['reference_number']) ?></td>
+                                        <td><?= htmlspecialchars($expense['period_covered']) ?></td>
+                                        <td><?= htmlspecialchars($expense['paid_by_name']) ?></td>
+                                        <td>
+                                            <?php if (!empty($expense['id'])): ?>
+                                                <a href="./view-receipt.php?id=<?= htmlspecialchars($expense['id']) ?>&type=compliance" target="_blank" class="btn btn-sm btn-info">
+                                                    View
+                                                </a>
+                                            <?php else: ?>
+                                                N/A
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
-                
+
                 <div class="mt-4">
                     <h5>Totals by Type:</h5>
                     <div class="row">
@@ -141,10 +148,10 @@ require_once '../../../includes/header.php';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Set payment date to today by default
-    document.getElementById('payment_date').valueAsDate = new Date();
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set payment date to today by default
+        document.getElementById('payment_date').valueAsDate = new Date();
+    });
 </script>
 
 <?php require '../../../includes/footer.php'; ?>
