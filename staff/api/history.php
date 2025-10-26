@@ -61,7 +61,7 @@ require_once '../includes/staff-header.php';
         <div class="card-header py-3">
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <h6 class="m-0 font-weight-bold text-primary">All Payments</h6>
+                    <h5>All Payments</h5>
                 </div>
                 <div class="col-md-6">
                     <form class="form-inline float-end">

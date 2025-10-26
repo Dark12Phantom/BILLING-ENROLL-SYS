@@ -61,7 +61,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->commit();
 
         $_SESSION['success'] = "Student added successfully!";
-        header("Location: index.php");
+        echo '
+            <div class="container mt-5">
+                <div class="alert alert-success text-center shadow-sm" role="alert" style="max-width:600px;margin:auto;">
+                    <h4 class="alert-heading">Student Added Successfully!</h4>
+                    <p class="mb-0">You will be redirected to the student list in <strong>3 seconds...</strong></p>
+                </div>
+            </div>
+            <meta http-equiv="refresh" content="3;url=index.php">
+            ';
         exit();
     } catch (PDOException $e) {
         $pdo->rollBack();
@@ -122,180 +130,180 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 <body>
-<div class="container py-4">
-    <div class="row">
-        <div class="col-md-12">
-            <h2 class="text-center mb-4">Add New Student</h2>
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="text-center mb-4">Add New Student</h2>
 
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Student Information Form</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5 class="section-title">Student Information</h5>
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Student Information Form</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="section-title">Student Information</h5>
 
-                                <div class="text-center mb-4">
-                                    <div class="preview-container" id="uploadArea">
-                                        <div class="upload-icon">📷</div>
-                                        <img id="imagePreview" alt="ID Picture Preview">
+                                    <div class="text-center mb-4">
+                                        <div class="preview-container" id="uploadArea">
+                                            <div class="upload-icon">📷</div>
+                                            <img id="imagePreview" alt="ID Picture Preview">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="id_picture" class="form-label">Student ID Picture</label>
+                                            <input type="file" class="form-control" id="id_picture" name="idPicturePath" accept="image/*" required hidden>
+                                            <div class="form-text">Upload a passport-size photo (JPG, PNG, max 2MB)</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="student_id" class="form-label">Student ID</label>
+                                        <input type="text" class="form-control" id="student_id" name="student_id" required>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="id_picture" class="form-label">Student ID Picture</label>
-                                        <input type="file" class="form-control" id="id_picture" name="idPicturePath" accept="image/*" required hidden>
-                                        <div class="form-text">Upload a passport-size photo (JPG, PNG, max 2MB)</div>
+                                        <label for="first_name" class="form-label">First Name</label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="last_name" class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                        <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="gender" class="form-label">Gender</label>
+                                        <select class="form-select" id="gender" name="gender" required>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
                                     </div>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label for="student_id" class="form-label">Student ID</label>
-                                    <input type="text" class="form-control" id="student_id" name="student_id" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="first_name" class="form-label">First Name</label>
-                                    <input type="text" class="form-control" id="first_name" name="first_name" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="last_name" class="form-label">Last Name</label>
-                                    <input type="text" class="form-control" id="last_name" name="last_name" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="date_of_birth" class="form-label">Date of Birth</label>
-                                    <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="gender" class="form-label">Gender</label>
-                                    <select class="form-select" id="gender" name="gender" required>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                        <option value="Other">Other</option>
-                                    </select>
+                                <div class="col-md-6">
+                                    <h5 class="section-title">Additional Information</h5>
+
+                                    <div class="mb-3">
+                                        <label for="address" class="form-label">Home Address</label>
+                                        <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="mobile_number" class="form-label">Mobile Number</label>
+                                        <input type="tel" class="form-control" maxlength="11" pattern="[0-9]{11}" id="mobile_number" name="mobile_number">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="grade_level" class="form-label">Grade Level</label>
+                                        <select class="form-select" id="grade_level" name="grade_level" required>
+                                            <option value="" disabled selected> Select Grade Level </option>
+                                            <option value="Kindergarten">Kindergarten</option>
+                                            <option value="Grade 1">Grade 1</option>
+                                            <option value="Grade 2">Grade 2</option>
+                                            <option value="Grade 3">Grade 3</option>
+                                            <option value="Grade 4">Grade 4</option>
+                                            <option value="Grade 5">Grade 5</option>
+                                            <option value="Grade 6">Grade 6</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="section" class="form-label">Section</label>
+                                        <input type="text" class="form-control" id="section" name="section" required>
+                                    </div>
+
+                                    <h5 class="section-title mt-4">Parent/Guardian Information</h5>
+
+                                    <div class="mb-3">
+                                        <label for="parent_first_name" class="form-label">First Name</label>
+                                        <input type="text" class="form-control" id="parent_first_name" name="parent_first_name" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="parent_last_name" class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" id="parent_last_name" name="parent_last_name" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="relationship" class="form-label">Relationship</label>
+                                        <input type="text" class="form-control" id="relationship" name="relationship" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="parent_mobile_number" class="form-label">Mobile Number</label>
+                                        <input type="tel" class="form-control" maxlength="11" pattern="[0-9]{11}" id="parent_mobile_number" name="parent_mobile_number" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="parent_email" class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" id="parent_email" name="parent_email">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="parent_address" class="form-label">Address</label>
+                                        <textarea class="form-control" id="parent_address" name="parent_address" rows="2"></textarea>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <h5 class="section-title">Additional Information</h5>
-
-                                <div class="mb-3">
-                                    <label for="address" class="form-label">Home Address</label>
-                                    <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="mobile_number" class="form-label">Mobile Number</label>
-                                    <input type="tel" class="form-control" id="mobile_number" name="mobile_number">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="grade_level" class="form-label">Grade Level</label>
-                                    <select class="form-select" id="grade_level" name="grade_level" required>
-                                        <option value="" disabled selected> Select Grade Level </option>
-                                        <option value="Kindergarten">Kindergarten</option>
-                                        <option value="Grade 1">Grade 1</option>
-                                        <option value="Grade 2">Grade 2</option>
-                                        <option value="Grade 3">Grade 3</option>
-                                        <option value="Grade 4">Grade 4</option>
-                                        <option value="Grade 5">Grade 5</option>
-                                        <option value="Grade 6">Grade 6</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="section" class="form-label">Section</label>
-                                    <input type="text" class="form-control" id="section" name="section" required>
-                                </div>
-
-                                <h5 class="section-title mt-4">Parent/Guardian Information</h5>
-
-                                <div class="mb-3">
-                                    <label for="parent_first_name" class="form-label">First Name</label>
-                                    <input type="text" class="form-control" id="parent_first_name" name="parent_first_name" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="parent_last_name" class="form-label">Last Name</label>
-                                    <input type="text" class="form-control" id="parent_last_name" name="parent_last_name" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="relationship" class="form-label">Relationship</label>
-                                    <input type="text" class="form-control" id="relationship" name="relationship" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="parent_mobile_number" class="form-label">Mobile Number</label>
-                                    <input type="tel" class="form-control" id="parent_mobile_number" name="parent_mobile_number" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="parent_email" class="form-label">Email Address</label>
-                                    <input type="email" class="form-control" id="parent_email" name="parent_email">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="parent_address" class="form-label">Address</label>
-                                    <textarea class="form-control" id="parent_address" name="parent_address" rows="2"></textarea>
-                                </div>
+                            <div class="mt-4 text-center">
+                                <button type="submit" class="btn btn-primary btn-lg">Save Student</button>
+                                <a href="#" class="btn btn-secondary btn-lg ms-2">Cancel</a>
                             </div>
-                        </div>
-
-                        <div class="mt-4 text-center">
-                            <button type="submit" class="btn btn-primary btn-lg">Save Student</button>
-                            <a href="#" class="btn btn-secondary btn-lg ms-2">Cancel</a>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const fileInput = document.getElementById('id_picture');
-        const imagePreview = document.getElementById('imagePreview');
-        const uploadArea = document.getElementById('uploadArea');
-        const uploadIcon = uploadArea.querySelector('.upload-icon');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('id_picture');
+            const imagePreview = document.getElementById('imagePreview');
+            const uploadArea = document.getElementById('uploadArea');
+            const uploadIcon = uploadArea.querySelector('.upload-icon');
 
-        uploadArea.addEventListener('click', function() {
-            fileInput.click();
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function() {
+                const file = this.files[0];
+
+                if (file) {
+                    const reader = new FileReader();
+
+                    reader.addEventListener('load', function() {
+                        imagePreview.src = reader.result;
+                        imagePreview.style.display = 'block';
+                        uploadIcon.style.display = 'none';
+                    });
+
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#0d6efd';
+                uploadArea.style.backgroundColor = '#e9ecef';
+            });
+
+            uploadArea.addEventListener('dragleave', function() {
+                uploadArea.style.borderColor = '#ccc';
+                uploadArea.style.backgroundColor = '#f8f9fa';
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#ccc';
+                uploadArea.style.backgroundColor = '#f8f9fa';
+
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    const event = new Event('change');
+                    fileInput.dispatchEvent(event);
+                }
+            });
         });
+    </script>
 
-        fileInput.addEventListener('change', function() {
-            const file = this.files[0];
-
-            if (file) {
-                const reader = new FileReader();
-
-                reader.addEventListener('load', function() {
-                    imagePreview.src = reader.result;
-                    imagePreview.style.display = 'block';
-                    uploadIcon.style.display = 'none';
-                });
-
-                reader.readAsDataURL(file);
-            }
-        });
-
-        uploadArea.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            uploadArea.style.borderColor = '#0d6efd';
-            uploadArea.style.backgroundColor = '#e9ecef';
-        });
-
-        uploadArea.addEventListener('dragleave', function() {
-            uploadArea.style.borderColor = '#ccc';
-            uploadArea.style.backgroundColor = '#f8f9fa';
-        });
-
-        uploadArea.addEventListener('drop', function(e) {
-            e.preventDefault();
-            uploadArea.style.borderColor = '#ccc';
-            uploadArea.style.backgroundColor = '#f8f9fa';
-
-            if (e.dataTransfer.files.length) {
-                fileInput.files = e.dataTransfer.files;
-                const event = new Event('change');
-                fileInput.dispatchEvent(event);
-            }
-        });
-    });
-</script>
-    
 </body>
 
 <?php require_once '../../includes/footer.php'; ?>

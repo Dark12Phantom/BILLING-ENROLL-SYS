@@ -54,7 +54,8 @@ function logout()
 function protectPage()
 {
     if (!isLoggedIn()) {
-        header("Location: ../login.php");
+        $root = 'http://' . $_SERVER['HTTP_HOST'] . '/BILLING-ENROLL-SYS/login.php';
+        header("Location: $root");
         exit();
     }
 }

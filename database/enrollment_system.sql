@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Oct 18, 2025 at 06:09 PM
+-- Generation Time: Oct 26, 2025 at 03:12 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -38,17 +38,6 @@ CREATE TABLE `billing_schedule` (
   `status` enum('active','inactive') DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `billing_schedule`
---
-
-INSERT INTO `billing_schedule` (`id`, `expense_name`, `amount`, `category`, `frequency`, `next_due_date`, `last_run`, `status`) VALUES
-(1, 'Teachers\' Salary', 126000.00, 'Operational', 'monthly', '2025-11-18', '2025-10-18', 'active'),
-(2, 'Social Security System', 50790.00, 'Compliance', 'monthly', '2025-11-18', '2025-10-18', 'active'),
-(3, 'PhilHealth', 5800.00, 'Compliance', 'monthly', '2025-11-18', '2025-10-18', 'active'),
-(4, 'Pag-IBIG', 18058.00, 'Compliance', 'monthly', '2025-11-18', '2025-10-18', 'active'),
-(5, 'Depreciation', 9000.00, 'Operational', 'monthly', '2025-11-18', '2025-10-18', 'active');
-
 -- --------------------------------------------------------
 
 --
@@ -65,15 +54,6 @@ CREATE TABLE `compliance_expenses` (
   `paid_by` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
---
--- Dumping data for table `compliance_expenses`
---
-
-INSERT INTO `compliance_expenses` (`id`, `type`, `amount`, `payment_date`, `reference_number`, `period_covered`, `paid_by`) VALUES
-(1, 'Social Security System', 50790.00, '2025-10-18', 'REF-20251018-0001', '1 Month', 0),
-(2, 'PhilHealth', 5800.00, '2025-10-18', 'REF-20251018-0002', '1 Month', 0),
-(3, 'Pag-IBIG', 18058.00, '2025-10-18', 'REF-20251018-0003', '1 Month', 0);
-
 -- --------------------------------------------------------
 
 --
@@ -87,13 +67,6 @@ CREATE TABLE `discounts` (
   `student_id` int(11) NOT NULL,
   `fees_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `discounts`
---
-
-INSERT INTO `discounts` (`id`, `discount_types`, `total_amount`, `student_id`, `fees_id`) VALUES
-(1, '[\"referral\",\"earlybird\",\"sibling\",\"fullpayment\"]', 2500, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -110,14 +83,6 @@ CREATE TABLE `fees` (
   `frequency` enum('One-time','Monthly','Quarterly','Annual') DEFAULT 'One-time'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
---
--- Dumping data for table `fees`
---
-
-INSERT INTO `fees` (`id`, `name`, `description`, `amount`, `is_recurring`, `frequency`) VALUES
-(1, 'Tuition Fee', 'Sample description', 5000.00, 1, 'Monthly'),
-(3, 'Book Fee', 'Fee for books', 1000.00, 0, 'One-time');
-
 -- --------------------------------------------------------
 
 --
@@ -133,14 +98,6 @@ CREATE TABLE `operational_expenses` (
   `date_incurred` date NOT NULL,
   `approved_by` int(30) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `operational_expenses`
---
-
-INSERT INTO `operational_expenses` (`id`, `category`, `particular`, `amount`, `evidence`, `date_incurred`, `approved_by`) VALUES
-(1, 'Operational', 'Teachers\' Salary', 126000.00, 'Auto-Billed', '2025-10-18', 0),
-(2, 'Operational', 'Depreciation', 9000.00, 'Auto-Billed', '2025-10-18', 0);
 
 -- --------------------------------------------------------
 
@@ -159,13 +116,6 @@ CREATE TABLE `parents` (
   `address` text DEFAULT NULL,
   `idParentPicturePath` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `parents`
---
-
-INSERT INTO `parents` (`id`, `student_id`, `first_name`, `last_name`, `relationship`, `mobile_number`, `email`, `address`, `idParentPicturePath`) VALUES
-(1, 1, 'Anabel', 'Ramos', 'Guardian', '098765654', 'anabel@gmail.com', 'Quezon City', '');
 
 -- --------------------------------------------------------
 
@@ -212,17 +162,6 @@ CREATE TABLE `receipts` (
   `compliance_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `receipts`
---
-
-INSERT INTO `receipts` (`id`, `expense_id`, `receipt_no`, `date_issued`, `amount`, `description`, `compliance_id`) VALUES
-(1, 1, 'REF-20251018-0001', '2025-10-18', 126000.00, 'Teachers\' Salary', NULL),
-(2, 2, 'REF-20251018-0002', '2025-10-18', 9000.00, 'Depreciation', NULL),
-(3, NULL, 'REF-20251018-0001', '2025-10-18', 50790.00, 'Social Security System', 1),
-(4, NULL, 'REF-20251018-0002', '2025-10-18', 5800.00, 'PhilHealth', 2),
-(5, NULL, 'REF-20251018-0003', '2025-10-18', 18058.00, 'Pag-IBIG', 3);
-
 -- --------------------------------------------------------
 
 --
@@ -245,13 +184,6 @@ CREATE TABLE `students` (
   `idPicturePath` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
---
--- Dumping data for table `students`
---
-
-INSERT INTO `students` (`id`, `student_id`, `first_name`, `last_name`, `date_of_birth`, `gender`, `address`, `mobile_number`, `grade_level`, `section`, `status`, `created_at`, `idPicturePath`) VALUES
-(1, '3123232', 'Juan', 'Dela Cruz', '1999-06-08', 'Male', 'Quezon City', '098765434565', 'Grade 7', 'B', 'Active', '2025-08-04 05:08:10', '');
-
 -- --------------------------------------------------------
 
 --
@@ -266,24 +198,6 @@ CREATE TABLE `student_fees` (
   `status` enum('Pending','Paid','Overdue') DEFAULT 'Pending',
   `amount` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `student_fees`
---
-
-INSERT INTO `student_fees` (`id`, `student_id`, `fee_id`, `due_date`, `status`, `amount`) VALUES
-(14, 1, 1, '2025-09-08', 'Pending', 208.33),
-(15, 1, 1, '2025-10-08', 'Pending', 208.33),
-(16, 1, 1, '2025-11-08', 'Pending', 208.33),
-(17, 1, 1, '2025-12-08', 'Pending', 208.33),
-(18, 1, 1, '2026-01-08', 'Pending', 208.33),
-(19, 1, 1, '2026-02-08', 'Pending', 208.33),
-(20, 1, 1, '2026-03-08', 'Pending', 208.33),
-(21, 1, 1, '2026-04-08', 'Pending', 208.33),
-(22, 1, 1, '2026-05-08', 'Pending', 208.33),
-(23, 1, 1, '2026-06-08', 'Pending', 208.33),
-(24, 1, 1, '2026-07-08', 'Pending', 208.33),
-(25, 1, 1, '2026-08-08', 'Pending', 208.37);
 
 -- --------------------------------------------------------
 
@@ -300,15 +214,6 @@ CREATE TABLE `users` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `last_login` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `created_at`, `last_login`) VALUES
-(0, 'System', NULL, NULL, 'system', NULL, NULL),
-(1, 'admin', 'admin@school.edu', '$2y$10$c9/A3vnd9BvYwr6ALRcjhO4LvYZmRdsNc.PGsGxYZxyu5cEHxbQKG', 'admin', '2025-08-04 05:02:49', '2025-10-18 23:58:04'),
-(3, 'staff1', 'gacetaerick124@gmail.com', '$2y$10$bszBYBKTJLZY8sbNFoL0pOtFCNiaIvI/D7V9xSKpzsLIsHj94W8/q', 'staff', '2025-09-14 09:36:44', '2025-10-09 18:34:49');
 
 -- --------------------------------------------------------
 
@@ -331,15 +236,6 @@ CREATE TABLE `user_tables` (
   `date_of_birth` date DEFAULT NULL,
   `idPicturePath` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `user_tables`
---
-
-INSERT INTO `user_tables` (`id`, `userID`, `first_name`, `last_name`, `staff_id`, `user_type`, `status`, `age`, `gender`, `address`, `mobile_number`, `date_of_birth`, `idPicturePath`) VALUES
-(0, 0, 'System', NULL, NULL, 'System Auto-Billing', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(1, 1, 'School', 'Admin', 1234565, 'admin', 'Active', 0, 'Male', 'Ed Sidi, Asi Ed Sina, Paeey Sidi', '09123456789', '1987-06-10', ''),
-(13, 3, 'Erick', 'Gaceta', 3131412, 'staff', '', 0, 'Female', 'Buguias, Benguet\r\nBaguio, Benguet', '09201555544', '2001-02-08', 'STA_3131412PFP.png');
 
 --
 -- Indexes for dumped tables
@@ -450,79 +346,79 @@ ALTER TABLE `user_tables`
 -- AUTO_INCREMENT for table `billing_schedule`
 --
 ALTER TABLE `billing_schedule`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `compliance_expenses`
 --
 ALTER TABLE `compliance_expenses`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `discounts`
 --
 ALTER TABLE `discounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `fees`
 --
 ALTER TABLE `fees`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `operational_expenses`
 --
 ALTER TABLE `operational_expenses`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `parents`
 --
 ALTER TABLE `parents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `payment_items`
 --
 ALTER TABLE `payment_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `receipts`
 --
 ALTER TABLE `receipts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `student_fees`
 --
 ALTER TABLE `student_fees`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `user_tables`
 --
 ALTER TABLE `user_tables`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables

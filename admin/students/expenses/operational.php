@@ -15,6 +15,17 @@ $expenses = $stmt->fetchAll();
 $stmt = $pdo->query("SELECT SUM(amount) FROM operational_expenses");
 $total = $stmt->fetchColumn();
 
+$incomeStmt = $pdo->query("SELECT SUM(amount) AS total_income FROM payment_items");
+$totalIncome = $incomeStmt -> fetchColumn() ?: 0;
+
+$compStmt = $pdo->query("SELECT SUM(amount) AS total_compliance FROM compliance_expenses");
+$totalComp = $compStmt -> fetchColumn() ?: 0;
+
+$opStmt = $pdo->query("SELECT SUM(amount) AS total_operational FROM operational_expenses");
+$totalOp = $opStmt -> fetchColumn() ?: 0;
+
+$netProfit = $totalIncome - ($totalComp + $totalOp);
+
 require_once '../../../includes/header.php';
 ?>
 
@@ -28,7 +39,7 @@ require_once '../../../includes/header.php';
 
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Expense Tracking</h6>
+            <h5>Expense Tracking</h5>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
                 <i class="fas fa-plus"></i> Add Expense
             </button>
@@ -62,7 +73,7 @@ require_once '../../../includes/header.php';
                                     <td><?= htmlspecialchars($expense['approved_by_name']) ?></td>
                                     <td>
                                         <?php if (!empty($expense['id'])): ?>
-                                            <a href="./view-receipt.php?id=<?= htmlspecialchars($expense['id'])?>&type=operational" target="_blank" class="btn btn-sm btn-info">
+                                            <a href="./view-receipt.php?id=<?= htmlspecialchars($expense['id']) ?>&type=operational" target="_blank" class="btn btn-sm btn-info">
                                                 View
                                             </a>
                                         <?php else: ?>
@@ -86,6 +97,42 @@ require_once '../../../includes/header.php';
                         </tr>
                     </tfoot>
                 </table>
+            </div>
+        </div>
+        <div class="p-4 row">
+            <div class="col-sm-4 mb-3 mb-sm-0">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Income From Students</h5>
+                        <p class="card-text">₱<?= number_format($totalIncome, 2) ?></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Compliance Expenses</h5>
+                        <p class="card-text">₱<?= number_format($totalComp, 2) ?></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Operational Expenses</h5>
+                        <p class="card-text">₱<?= number_format($totalOp, 2) ?></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 row">
+            <div class="col-sm-4 mb-3 mb-sm-0">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Net Profit</h5>
+                        <p class="card-text">₱<?= number_format($netProfit, 2) ?></p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -151,9 +198,9 @@ require_once '../../../includes/header.php';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('date_incurred').valueAsDate = new Date();
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('date_incurred').valueAsDate = new Date();
+    });
 </script>
 
 <?php require '../../../includes/footer.php'; ?>

@@ -12,6 +12,9 @@
     <!-- Custom CSS -->
     <link href="../../assets/css/style.css" rel="stylesheet">
     <link rel="icon" href="../logo.png" type="image/png">
+    <link rel="icon" href="../../logo.png" type="image/png">
+    <link rel="icon" href="../../../logo.png" type="image/png">
+    <link rel="icon" href="../../../../logo.png" type="image/png">
     <style>
         :root {
             --primary-color: #3498db;

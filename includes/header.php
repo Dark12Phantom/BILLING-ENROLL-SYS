@@ -14,6 +14,9 @@
     <link href="../../assets/css/style.css" rel="stylesheet">
     <link href="../assets/css/style.css" rel="stylesheet">
     <link rel="icon" href="../logo.png" type="image/png">
+    <link rel="icon" href="../../logo.png" type="image/png">
+    <link rel="icon" href="../../../logo.png" type="image/png">
+    <link rel="icon" href="../../../../logo.png" type="image/png">
     <style>
         :root {
             --primary-color: #3498db;
@@ -66,16 +69,10 @@
                         <a class="nav-link" href="/BILLING-ENROLL-SYS/admin/dashboard.php">Home</a>
                     </li>
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="studentDropdown" role="button" data-bs-toggle="dropdown">
-                            User Management
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/users/index.php">User List</a></li>
-                            <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/users/add.php">Add User</a></li>
-                        </ul>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/BILLING-ENROLL-SYS/admin/users/index.php">User Management</a>
                     </li>
-
+                    <!-- COMMENT THIS THEN UNCOMMENT BELOW -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="studentDropdown" role="button" data-bs-toggle="dropdown">
                             Student Record
@@ -85,6 +82,11 @@
                             <li><a class="dropdown-item" href="/BILLING-ENROLL-SYS/admin/students/add.php">Add Student</a></li>
                         </ul>
                     </li>
+                    <!-- UNCOMMENT THIS IF NEEDED -->
+                    <!-- <li class="nav-item">
+                        <a class="nav-link" href="/BILLING-ENROLL-SYS/admin/students/index.php">Student Record</a>
+                    </li> -->
+
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="billingDropdown" role="button" data-bs-toggle="dropdown">
                             Billing & Payment
