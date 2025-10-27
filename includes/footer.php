@@ -32,6 +32,35 @@
                 });
             });
         })
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-expense')) {
+                e.preventDefault();
+                const expenseId = e.target.dataset.id;
+
+                if (!confirm('Are you sure you want to delete this expense?')) return;
+
+                fetch('delete-expense.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: 'expense_id=' + encodeURIComponent(expenseId)
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Remove the row visually
+                            const row = e.target.closest('tr');
+                            row.style.transition = 'opacity 0.3s';
+                            row.style.opacity = '0';
+                            setTimeout(() => row.remove(), 300);
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(() => alert('Error deleting expense.'));
+            }
+        });
     </script>
     </body>
 

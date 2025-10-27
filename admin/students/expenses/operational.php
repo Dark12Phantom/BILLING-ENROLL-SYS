@@ -16,13 +16,13 @@ $stmt = $pdo->query("SELECT SUM(amount) FROM operational_expenses");
 $total = $stmt->fetchColumn();
 
 $incomeStmt = $pdo->query("SELECT SUM(amount) AS total_income FROM payment_items");
-$totalIncome = $incomeStmt -> fetchColumn() ?: 0;
+$totalIncome = $incomeStmt->fetchColumn() ?: 0;
 
 $compStmt = $pdo->query("SELECT SUM(amount) AS total_compliance FROM compliance_expenses");
-$totalComp = $compStmt -> fetchColumn() ?: 0;
+$totalComp = $compStmt->fetchColumn() ?: 0;
 
 $opStmt = $pdo->query("SELECT SUM(amount) AS total_operational FROM operational_expenses");
-$totalOp = $opStmt -> fetchColumn() ?: 0;
+$totalOp = $opStmt->fetchColumn() ?: 0;
 
 $netProfit = $totalIncome - ($totalComp + $totalOp);
 
@@ -81,9 +81,9 @@ require_once '../../../includes/header.php';
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <a href="delete-expense.php?id=<?= $expense['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                        <button type="button" class="btn btn-sm btn-danger delete-expense" data-id="<?= $expense['id'] ?>">
                                             <i class="fas fa-trash"></i>
-                                        </a>
+                                        </button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -201,6 +201,38 @@ require_once '../../../includes/header.php';
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('date_incurred').valueAsDate = new Date();
     });
+</script>
+<script>
+document.addEventListener('click', function (e) {
+    if (e.target.closest('.delete-expense')) {
+        const btn = e.target.closest('.delete-expense');
+        const expenseId = btn.dataset.id;
+
+        if (!confirm('Are you sure you want to delete this expense?')) return;
+
+        fetch('delete-expense.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ expense_id: expenseId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Smoothly remove the deleted row
+                const row = btn.closest('tr');
+                row.style.transition = 'opacity 0.3s';
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 300);
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error connecting to server.');
+        });
+    }
+});
 </script>
 
 <?php require '../../../includes/footer.php'; ?>
