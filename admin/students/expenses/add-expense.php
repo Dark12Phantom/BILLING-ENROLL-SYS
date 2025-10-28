@@ -4,26 +4,21 @@ require_once '../../../includes/db.php';
 
 protectPage();
 
-// Only process POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: operational.php");
     exit();
 }
 
-// Get current user ID (approver)
 $approvedBy = $_SESSION['user_id'];
 
-// Validate and sanitize input data
 $category = trim($_POST['category']);
 $particular = trim($_POST['particular']);
 $amount = floatval($_POST['amount']);
 $dateIncurred = $_POST['date_incurred'];
 $evidence = '';
 
-// Initialize error array
 $errors = [];
 
-// Validation
 if (empty($category)) {
     $errors[] = "Category is required.";
 }
@@ -40,11 +35,9 @@ if (empty($dateIncurred) || !strtotime($dateIncurred)) {
     $errors[] = "Valid date is required.";
 }
 
-// Handle file upload for evidence
 if (isset($_FILES['evidence']) && $_FILES['evidence']['error'] === UPLOAD_ERR_OK) {
     $uploadDir = '../uploads/expenses/';
     
-    // Create directory if it doesn't exist
     if (!file_exists($uploadDir)) {
         mkdir($uploadDir, 0777, true);
     }
@@ -53,9 +46,8 @@ if (isset($_FILES['evidence']) && $_FILES['evidence']['error'] === UPLOAD_ERR_OK
     $fileName = uniqid('expense_') . '.' . $fileExt;
     $targetPath = $uploadDir . $fileName;
     
-    // Validate file type and size
     $allowedTypes = ['jpg', 'jpeg', 'png', 'pdf'];
-    $maxFileSize = 2 * 1024 * 1024; // 2MB
+    $maxFileSize = 2 * 1024 * 1024;
     
     if (in_array($fileExt, $allowedTypes)) {
         if ($_FILES['evidence']['size'] <= $maxFileSize) {
@@ -72,9 +64,10 @@ if (isset($_FILES['evidence']) && $_FILES['evidence']['error'] === UPLOAD_ERR_OK
     }
 }
 
-// If no errors, proceed with database insertion
 if (empty($errors)) {
     try {
+        $pdo->beginTransaction();
+
         $stmt = $pdo->prepare("INSERT INTO operational_expenses 
                              (category, particular, amount, evidence, date_incurred, approved_by) 
                              VALUES (?, ?, ?, ?, ?, ?)");
@@ -87,10 +80,28 @@ if (empty($errors)) {
             $dateIncurred,
             $approvedBy
         ]);
-        
-        $_SESSION['success'] = "Expense added successfully!";
+
+        $expenseId = $pdo->lastInsertId();
+
+        $receiptNo = 'RCPT-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+
+        $stmt = $pdo->prepare("
+            INSERT INTO receipts (expense_id, receipt_no, date_issued, amount, description, compliance_id)
+            VALUES (?, ?, ?, ?, ?, NULL)
+        ");
+        $stmt->execute([
+            $expenseId,
+            $receiptNo,
+            date('Y-m-d'),
+            $amount,
+            "Operational Expense - $category: $particular"
+        ]);
+
+        $pdo->commit();
+        $_SESSION['success'] = "Operational expense and receipt recorded successfully!";
     } catch (PDOException $e) {
-        // Delete uploaded file if database insertion fails
+        $pdo->rollBack();
+
         if (!empty($evidence) && file_exists('../uploads/' . $evidence)) {
             unlink('../uploads/' . $evidence);
         }
@@ -98,10 +109,9 @@ if (empty($errors)) {
     }
 }
 
-// Handle errors or redirect on success
 if (!empty($errors)) {
     $_SESSION['error'] = implode("<br>", $errors);
-    $_SESSION['form_data'] = $_POST; // Save form data for repopulation
+    $_SESSION['form_data'] = $_POST;
 }
 
 header("Location: operational.php");

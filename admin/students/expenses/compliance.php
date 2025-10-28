@@ -2,18 +2,29 @@
 require_once '../../../includes/auth.php';
 protectPage();
 
-// Fetch compliance expenses
 $stmt = $pdo->query("SELECT c.*, u.username as paid_by_name 
                      FROM compliance_expenses c 
                      JOIN users u ON c.paid_by = u.id 
                      ORDER BY c.payment_date DESC");
 $expenses = $stmt->fetchAll();
 
-// Calculate totals by type
 $stmt = $pdo->query("SELECT type, SUM(amount) as total 
                      FROM compliance_expenses 
                      GROUP BY type");
 $totals = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+$stmt = $pdo->query("SELECT reference_number FROM payments ORDER BY id DESC LIMIT 1");
+$lastRef = $stmt->fetchColumn();
+
+$today = date('Ymd');
+
+if ($lastRef && preg_match("/^REF-$today-(\d{6})$/", $lastRef, $m)) {
+    $nextNum = str_pad($m[1] + 1, 6, '0', STR_PAD_LEFT);
+} else {
+    $nextNum = '000001';
+}
+
+$newRef = "REF-$today-$nextNum";
 
 require_once '../../../includes/header.php';
 ?>
@@ -69,6 +80,9 @@ require_once '../../../includes/header.php';
                                                 <a href="./view-receipt.php?id=<?= htmlspecialchars($expense['id']) ?>&type=compliance" target="_blank" class="btn btn-sm btn-info">
                                                     View
                                                 </a>
+                                                <a href="./edit-compliance.php?id=<?= htmlspecialchars($expense['id']) ?>&type=compliance" target="_blank" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
                                             <?php else: ?>
                                                 N/A
                                             <?php endif; ?>
@@ -113,7 +127,7 @@ require_once '../../../includes/header.php';
                     <div class="mb-3">
                         <label for="type" class="form-label">Type</label>
                         <select class="form-select" id="type" name="type" required>
-                            <option value="SSS">SSS</option>
+                            <option value="Social Security System">SSS</option>
                             <option value="Pag-IBIG">Pag-IBIG</option>
                             <option value="PhilHealth">PhilHealth</option>
                             <option value="Permit">Permit</option>
@@ -130,7 +144,8 @@ require_once '../../../includes/header.php';
                     </div>
                     <div class="mb-3">
                         <label for="reference_number" class="form-label">Reference Number</label>
-                        <input type="text" class="form-control" id="reference_number" name="reference_number">
+                        <input type="text" class="form-control" id="reference_number" name="reference_number"
+                            value="<?= htmlspecialchars($newRef) ?>" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="period_covered" class="form-label">Period Covered</label>
@@ -149,7 +164,6 @@ require_once '../../../includes/header.php';
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Set payment date to today by default
         document.getElementById('payment_date').valueAsDate = new Date();
     });
 </script>

@@ -10,21 +10,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-// Get current user ID
 $paidBy = $_SESSION['user_id'];
 
-// Validate and sanitize input data
 $type = $_POST['type'];
 $amount = floatval($_POST['amount']);
 $paymentDate = $_POST['payment_date'];
 $referenceNumber = trim($_POST['reference_number']);
 $periodCovered = trim($_POST['period_covered']);
 
-// Initialize error array
 $errors = [];
 
-// Validation
-if (!in_array($type, ['SSS', 'Pag-IBIG', 'PhilHealth', 'Permit', 'Registration'])) {
+if (!in_array($type, ['Social Security System', 'Pag-IBIG', 'PhilHealth', 'Permit', 'Registration'])) {
     $errors[] = "Invalid expense type.";
 }
 
@@ -36,13 +32,16 @@ if (empty($paymentDate) || !strtotime($paymentDate)) {
     $errors[] = "Valid payment date is required.";
 }
 
-// If no errors, proceed with database insertion
 if (empty($errors)) {
     try {
-        $stmt = $pdo->prepare("INSERT INTO compliance_expenses 
-                             (type, amount, payment_date, reference_number, period_covered, paid_by) 
-                             VALUES (?, ?, ?, ?, ?, ?)");
-        
+        $pdo->beginTransaction();
+
+        // Insert into compliance_expenses
+        $stmt = $pdo->prepare("
+            INSERT INTO compliance_expenses 
+            (type, amount, payment_date, reference_number, period_covered, paid_by) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
         $stmt->execute([
             $type,
             $amount,
@@ -51,14 +50,34 @@ if (empty($errors)) {
             $periodCovered,
             $paidBy
         ]);
-        
-        $_SESSION['success'] = "Compliance payment recorded successfully!";
+
+        $complianceId = $pdo->lastInsertId();
+
+        // Generate receipt number
+        $receiptNo = 'RCPT-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+
+        // Insert into receipts
+        $stmt = $pdo->prepare("
+            INSERT INTO receipts (expense_id, receipt_no, date_issued, amount, description, compliance_id)
+            VALUES (NULL, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $receiptNo,
+            date('Y-m-d'),
+            $amount,
+            "$type Payment for Period: $periodCovered",
+            $complianceId
+        ]);
+
+        $pdo->commit();
+
+        $_SESSION['success'] = "Compliance payment and receipt recorded successfully!";
     } catch (PDOException $e) {
+        $pdo->rollBack();
         $errors[] = "Database error: " . $e->getMessage();
     }
 }
 
-// Handle errors or redirect on success
 if (!empty($errors)) {
     $_SESSION['error'] = implode("<br>", $errors);
 }

@@ -60,6 +60,8 @@ $users = $stmt->fetchAll();
                         <tbody>
                             <?php
                             foreach ($users as $user) {
+                                $status = $user['status'] ?? 'Unknown';
+                                $badge = $status === 'Active' ? 'success' : ($status === 'Inactive' ? 'warning' : 'secondary');
                                 $lastLogin = $user['last_login']
                                     ? date("M d, Y h:i A", strtotime($user['last_login']))
                                     : 'Never';
@@ -69,14 +71,12 @@ $users = $stmt->fetchAll();
                                     echo '<td>' . htmlspecialchars($user['last_name']) . ', ' . htmlspecialchars($user['first_name']) . '</td>';
                                     echo '<td>' . htmlspecialchars($user['staff_id']) . '</td>';
                                     echo '<td>' . htmlspecialchars($user['user_type']) . '</td>';
-                                    echo '<td><span class="badge bg-'
-                                        . ($user['status'] == 'Active' ? 'success' : ($user['status'] == 'Inactive' ? 'warning' : 'secondary'))
-                                        . '">' . htmlspecialchars($user['status']) . '</span></td>';
+                                    echo '<td><span class="badge bg-' . $badge . '">' . htmlspecialchars($status) . '</span></td>';
                                     echo '<td>
                                     <a href="view.php?id=' . $user['id'] . '" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
                                     <a href="edit.php?id=' . $user['id'] . '" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
                                 </td>';
-                                echo '<td>' . htmlspecialchars($lastLogin) . '</td>';
+                                    echo '<td>' . htmlspecialchars($lastLogin) . '</td>';
                                     echo '</tr>';
                                 } elseif ($user['user_type'] == 'staff') {
                                     echo '<tr>';

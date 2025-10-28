@@ -50,43 +50,65 @@ require_once '../../includes/header.php';
                         <table class="table">
                             <tr>
                                 <th>Staff ID:</th>
-                                <td><?= htmlspecialchars($user['staff_id']) ?></td>
+                                <td><?= htmlspecialchars($user['staff_id'] ?? 'N/A') ?></td>
                             </tr>
                             <tr>
                                 <th>Name:</th>
-                                <td><?= htmlspecialchars($user['last_name']) ?>, <?= htmlspecialchars($user['first_name']) ?></td>
+                                <td>
+                                    <?= htmlspecialchars($user['last_name'] ?? '') ?>,
+                                    <?= htmlspecialchars($user['first_name'] ?? '') ?>
+                                </td>
                             </tr>
                             <tr>
                                 <th>Date of Birth:</th>
-                                <td><?= date('F j, Y', strtotime($user['date_of_birth'])) ?></td>
+                                <td>
+                                    <?php
+                                    if (!empty($user['date_of_birth'])) {
+                                        echo date('F j, Y', strtotime($user['date_of_birth']));
+                                    } else {
+                                        echo 'N/A';
+                                    }
+                                    ?>
+                                </td>
                             </tr>
                             <tr>
                                 <th>Age:</th>
-                                <td><?= floor((time() - strtotime($user['date_of_birth'])) / 31556926) ?> years</td>
+                                <td>
+                                    <?php
+                                    if (!empty($user['date_of_birth'])) {
+                                        $age = floor((time() - strtotime($user['date_of_birth'])) / 31556926);
+                                        echo $age . ' years';
+                                    } else {
+                                        echo 'N/A';
+                                    }
+                                    ?>
+                                </td>
                             </tr>
                             <tr>
                                 <th>Gender:</th>
-                                <td><?= htmlspecialchars($user['gender']) ?></td>
+                                <td><?= htmlspecialchars($user['gender'] ?? 'N/A') ?></td>
                             </tr>
                             <tr>
                                 <th>Address:</th>
-                                <td><?= htmlspecialchars($user['address']) ?></td>
+                                <td><?= htmlspecialchars($user['address'] ?? 'N/A') ?></td>
                             </tr>
                             <tr>
                                 <th>Mobile Number:</th>
-                                <td><?= htmlspecialchars($user['mobile_number']) ?></td>
+                                <td><?= htmlspecialchars($user['mobile_number'] ?? 'N/A') ?></td>
                             </tr>
                             <tr>
                                 <th>Grade Level:</th>
-                                <td><?= htmlspecialchars($user['user_type']) ?></td>
+                                <td><?= htmlspecialchars($user['user_type'] ?? 'N/A') ?></td>
                             </tr>
                             <tr>
                                 <th>Status:</th>
                                 <td>
-                                    <span class="badge bg-<?=
-                                                            $user['status'] == 'Active' ? 'success' : ($user['status'] == 'Inactive' ? 'warning' : 'secondary')
-                                                            ?>">
-                                        <?= htmlspecialchars($user['status']) ?>
+                                    <?php
+                                    $status = $user['status'] ?? 'Unknown';
+                                    $badge = $status === 'Active' ? 'success' : ($status === 'Inactive' ? 'warning' : 'secondary');
+                                    ?>
+                                    <span class="badge bg-<?= $badge ?>">
+                                        <?= htmlspecialchars($status) ?>
                                     </span>
                                 </td>
                             </tr>

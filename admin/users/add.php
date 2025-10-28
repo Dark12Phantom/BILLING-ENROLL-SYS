@@ -309,6 +309,28 @@ require_once '../../includes/header.php';
         const togglePassword = document.getElementById('togglePassword');
         const passwordField = document.getElementById('password');
 
+        (function() {
+                const today = new Date();
+                const y = today.getFullYear();
+                const m = String(today.getMonth() + 1).padStart(2, '0');
+                const d = String(today.getDate()).padStart(2, '0');
+                const maxDate = `${y}-${m}-${d}`;
+                const el = document.getElementById('date_of_birth');
+                if (el) el.max = maxDate;
+
+                document.addEventListener('submit', function(e) {
+                    const input = document.getElementById('date_of_birth');
+                    if (!input) return;
+                    if (input.value && input.value > maxDate) {
+                        e.preventDefault();
+                        input.setCustomValidity('Please choose today or a past date.');
+                        input.reportValidity();
+                    } else {
+                        input.setCustomValidity('');
+                    }
+                }, true);
+            })();
+
         // Image upload functionality
         uploadArea.addEventListener('click', function() {
             fileInput.click();
