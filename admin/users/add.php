@@ -15,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'last_name',
         'date_of_birth',
         'gender',
-        'status',
         'address',
         'username',
         'email',
@@ -331,7 +330,6 @@ require_once '../../includes/header.php';
                 }, true);
             })();
 
-        // Image upload functionality
         uploadArea.addEventListener('click', function() {
             fileInput.click();
         });
@@ -340,7 +338,6 @@ require_once '../../includes/header.php';
             const file = this.files[0];
 
             if (file) {
-                // Check file size (max 2MB)
                 if (file.size > 2 * 1024 * 1024) {
                     alert('File size exceeds 2MB. Please choose a smaller file.');
                     this.value = '';
@@ -404,7 +401,6 @@ require_once '../../includes/header.php';
                 }
             });
 
-            // Validate password length
             const password = document.getElementById('password').value;
             if (password.length < 8) {
                 valid = false;
