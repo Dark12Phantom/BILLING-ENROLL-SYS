@@ -86,7 +86,7 @@ $users = $stmt->fetchAll();
                                     echo '<td>' . htmlspecialchars($user['user_type']) . '</td>';
                                     echo '<td><span class="badge bg-'
                                         . ($user['status'] == 'Active' ? 'success' : ($user['status'] == 'Inactive' ? 'warning' : 'secondary'))
-                                        . '">' . htmlspecialchars($user['status']) . '</span></td>';
+                                        . '">' . htmlspecialchars($user['status'] ?? 'Unknown') . '</span></td>';
                                     echo '<td>
                                     <a href="view.php?id=' . $user['id'] . '" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
                                     <a href="edit.php?id=' . $user['id'] . '" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>

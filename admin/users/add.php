@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'last_name',
         'date_of_birth',
         'gender',
+        'status',
         'address',
         'username',
         'email',
@@ -50,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'last_name' => $_POST['last_name'],
             'date_of_birth' => $_POST['date_of_birth'],
             'gender' => $_POST['gender'],
+            'status' => 'Active',
             'address' => $_POST['address'],
             'mobile_number' => $_POST['mobile_number'],
             'user_type' => 'staff'
@@ -77,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $pdo->beginTransaction();
 
-                // First insert into users table
                 $userAccountData = [
                     'username' => $_POST['username'],
                     'email' => $_POST['email'],
@@ -91,10 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $userStmt->execute($userAccountData);
                 $userId = $pdo->lastInsertId();
 
-                // Then insert into user_tables table with the userID from users table
                 $userData['userID'] = $userId;
-                $stmt = $pdo->prepare("INSERT INTO user_tables (userID, staff_id, first_name, last_name, date_of_birth, gender, address, mobile_number, user_type, idPicturePath) 
-                                      VALUES (:userID, :staff_id, :first_name, :last_name, :date_of_birth, :gender, :address, :mobile_number, :user_type, :idPicturePath)");
+                $stmt = $pdo->prepare("INSERT INTO user_tables (userID, staff_id, first_name, last_name, date_of_birth, gender, address, mobile_number, user_type, status,idPicturePath) 
+                                      VALUES (:userID, :staff_id, :first_name, :last_name, :date_of_birth, :gender, :address, :mobile_number, :user_type, :status,:idPicturePath)");
                 $stmt->execute($userData);
 
                 $pdo->commit();
