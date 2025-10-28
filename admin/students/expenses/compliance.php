@@ -165,6 +165,46 @@ require_once '../../../includes/header.php';
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('payment_date').valueAsDate = new Date();
+
+        const typeSelect = document.getElementById('type');
+        const refInput = document.getElementById('reference_number');
+
+        function updateReference() {
+            const today = new Date();
+            const ymd = today.getFullYear().toString() +
+                String(today.getMonth() + 1).padStart(2, '0') +
+                String(today.getDate()).padStart(2, '0');
+
+            const type = typeSelect.value;
+            let shortType;
+
+            switch (type) {
+                case 'Social Security System':
+                    shortType = 'SSS';
+                    break;
+                case 'Pag-IBIG':
+                    shortType = 'PGB';
+                    break;
+                case 'PhilHealth':
+                    shortType = 'PHL';
+                    break;
+                case 'Permit':
+                    shortType = 'PMT';
+                    break;
+                case 'Registration':
+                    shortType = 'REG';
+                    break;
+                default:
+                    shortType = 'GEN';
+                    break;
+            }
+
+            refInput.value = `REF-${shortType}-${ymd}-000001`;
+        }
+
+        typeSelect.addEventListener('change', updateReference);
+
+        updateReference();
     });
 </script>
 
