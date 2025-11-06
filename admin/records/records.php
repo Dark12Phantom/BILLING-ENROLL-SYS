@@ -1,0 +1,125 @@
+<?php
+require_once '../../includes/auth.php';
+protectPage();
+require_once '../../includes/db.php';
+
+$stmt = $pdo->query("SELECT DISTINCT YEAR(created_at) AS year FROM students
+                        UNION
+                        SELECT DISTINCT YEAR(date_incurred) AS year FROM operational_expenses
+                        UNION
+                        SELECT DISTINCT YEAR(payment_date)AS year FROM compliance_expenses
+                        UNION
+                        SELECT DISTINCT YEAR(payment_date)AS year FROM payments
+                        ");
+$years = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+require_once '../../includes/header.php';
+?>
+
+<div class="row">
+    <div class="col-md-12">
+        <h2>Records</h2>
+        <hr>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h5>Year List</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 60%;">Year</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($years)): ?>
+                            <?php foreach ($years as $row): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($row['year']) ?></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-success me-1 view-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#recordsModal"
+                                            data-type="enrollment"
+                                            data-year="<?= htmlspecialchars($row['year']) ?>"
+                                            style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">
+                                            View Students
+                                        </button>
+
+                                        <button class="btn btn-sm btn-warning me-1 view-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#recordsModal"
+                                            data-type="transactions"
+                                            data-year="<?= htmlspecialchars($row['year']) ?>"
+                                            style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">
+                                            View Transactions
+                                        </button>
+
+                                        <button class="btn btn-sm btn-info view-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#recordsModal"
+                                            data-type="logs"
+                                            data-year="<?= htmlspecialchars($row['year']) ?>"
+                                            style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;">
+                                            View Logs
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="2" class="text-muted">No records found.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="recordsModal" tabindex="-1" aria-labelledby="recordsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="recordsModalLabel">View Records</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modalContent">
+        <div class="text-center text-muted">Loading records...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const year = btn.getAttribute('data-year');
+    const type = btn.getAttribute('data-type');
+    const modalContent = document.getElementById('modalContent');
+    const modalTitle = document.getElementById('recordsModalLabel');
+    
+    modalTitle.textContent = `Viewing ${type.charAt(0).toUpperCase() + type.slice(1)} for ${year}`;
+    modalContent.innerHTML = '<div class="text-center text-muted py-5">Loading...</div>';
+
+    try {
+      const response = await fetch(`fetch_${type}.php?year=${encodeURIComponent(year)}`);
+      const html = await response.text();
+      modalContent.innerHTML = html;
+    } catch (err) {
+      modalContent.innerHTML = '<div class="text-danger text-center py-5">Failed to load records.</div>';
+    }
+  });
+});
+</script>
+
+<?php require_once '../../includes/footer.php'; ?>

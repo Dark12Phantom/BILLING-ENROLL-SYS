@@ -24,7 +24,14 @@ $stmt = $pdo->prepare("SELECT * FROM parents WHERE student_id = ?");
 $stmt->execute([$studentId]);
 $parent = $stmt->fetch();
 
+$userId = $_SESSION['user_id'];
+$stmtUser = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM user_tables WHERE id = ?");
+$stmtUser->execute([$userId]);
+$lastUpdatedBy = $stmtUser->fetchColumn();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $today = date('Y-m-d H:i:s');
+
     $studentData = [
         'id' => $studentId,
         'student_id' => trim($_POST['student_id']),
@@ -36,7 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'mobile_number' => trim($_POST['mobile_number']),
         'grade_level' => trim($_POST['grade_level']),
         'section' => trim($_POST['section']),
-        'status' => $_POST['status']
+        'status' => $_POST['status'],
+        'schoolYear' => !empty(trim($_POST['school_year'])) ? trim($_POST['school_year']) : null,
+        'lastUpdated' => $today,
+        'last_updatedBy' => $lastUpdatedBy
     ];
 
     $parentData = [
@@ -125,7 +135,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                       grade_level = :grade_level,
                                       section = :section,
                                       status = :status,
-                                      idPicturePath = :idPicturePath
+                                      idPicturePath = :idPicturePath,
+                                      schoolYear = :schoolYear,
+                                      lastUpdated = :lastUpdated,
+                                      last_updatedBy = :last_updatedBy
                                       WHERE id = :id");
             } else {
                 $stmt = $pdo->prepare("UPDATE students SET 
@@ -138,7 +151,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                       mobile_number = :mobile_number,
                                       grade_level = :grade_level,
                                       section = :section,
-                                      status = :status
+                                      status = :status,
+                                      schoolYear = :schoolYear,
+                                      lastUpdated = :lastUpdated,
+                                      last_updatedBy = :last_updatedBy
                                       WHERE id = :id");
             }
 
@@ -256,6 +272,40 @@ require_once '../../includes/header.php';
                             value="<?= htmlspecialchars($student['section']) ?>" required>
                     </div>
                     <div class="mb-3">
+                        <label for="school_year" class="form-label">School Year</label>
+                        <input type="text" class="form-control" id="school_year" name="school_year"
+                            value="<?= htmlspecialchars($student['schoolYear']) ?>" readonly>
+                    </div>
+
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            const schoolYearInput = document.getElementById("school_year");
+                            const statusSelect = document.getElementById("status");
+
+                            function computeSchoolYear() {
+                                const now = new Date();
+                                const year = now.getFullYear();
+                                const month = now.getMonth() + 1;
+                                const start = month < 6 ? year - 1 : year;
+                                const end = start + 1;
+                                return `${start} - ${end}`;
+                            }
+
+                            if (statusSelect.value === "Active" && !schoolYearInput.value) {
+                                schoolYearInput.value = computeSchoolYear();
+                            }
+
+                            statusSelect.addEventListener("change", () => {
+                                const status = statusSelect.value;
+                                if (status === "Active") {
+                                    schoolYearInput.value = computeSchoolYear();
+                                } else {
+                                    schoolYearInput.value = "";
+                                }
+                            });
+                        });
+                    </script>
+                    <div class="mb-3">
                         <label for="status" class="form-label">Status</label>
                         <select class="form-select" id="status" name="status" required>
                             <option value="Active" <?= $student['status'] === 'Active' ? 'selected' : '' ?>>Active</option>
@@ -308,61 +358,61 @@ require_once '../../includes/header.php';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('id_picture');
-    const newImagePreview = document.getElementById('newIdPicturePreview');
-    
-    fileInput.addEventListener('change', function() {
-        const file = this.files[0];
-        
-        if (file) {
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-            if (!allowedTypes.includes(file.type)) {
-                alert('Only JPG, PNG, and GIF files are allowed.');
-                this.value = '';
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('id_picture');
+        const newImagePreview = document.getElementById('newIdPicturePreview');
+
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+
+            if (file) {
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Only JPG, PNG, and GIF files are allowed.');
+                    this.value = '';
+                    newImagePreview.src = '';
+                    newImagePreview.style.display = 'none';
+                    return;
+                }
+
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('File size must be less than 2MB.');
+                    this.value = '';
+                    newImagePreview.src = '';
+                    newImagePreview.style.display = 'none';
+                    return;
+                }
+
+                const reader = new FileReader();
+
+                reader.addEventListener('load', function() {
+                    newImagePreview.src = reader.result;
+                    newImagePreview.style.display = 'block';
+                });
+
+                reader.readAsDataURL(file);
+            } else {
                 newImagePreview.src = '';
                 newImagePreview.style.display = 'none';
-                return;
             }
-            
-            if (file.size > 2 * 1024 * 1024) {
-                alert('File size must be less than 2MB.');
-                this.value = '';
-                newImagePreview.src = '';
-                newImagePreview.style.display = 'none';
-                return;
+        });
+
+        const dobInput = document.getElementById('date_of_birth');
+        dobInput.addEventListener('change', function() {
+            if (this.value) {
+                const dob = new Date(this.value);
+                const today = new Date();
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDiff = today.getMonth() - dob.getMonth();
+
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+
+                console.log('Age:', age);
             }
-            
-            const reader = new FileReader();
-            
-            reader.addEventListener('load', function() {
-                newImagePreview.src = reader.result;
-                newImagePreview.style.display = 'block';
-            });
-            
-            reader.readAsDataURL(file);
-        } else {
-            newImagePreview.src = '';
-            newImagePreview.style.display = 'none';
-        }
+        });
     });
-    
-    const dobInput = document.getElementById('date_of_birth');
-    dobInput.addEventListener('change', function() {
-        if (this.value) {
-            const dob = new Date(this.value);
-            const today = new Date();
-            let age = today.getFullYear() - dob.getFullYear();
-            const monthDiff = today.getMonth() - dob.getMonth();
-            
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-                age--;
-            }
-            
-            console.log('Age:', age);
-        }
-    });
-});
 </script>
 
 <script>

@@ -5,10 +5,14 @@ require_once '../../../includes/db.php';
 protectPage();
 
 // Fetch operational expenses
-$stmt = $pdo->query("SELECT e.*, u.username as approved_by_name 
-                     FROM operational_expenses e 
-                     JOIN users u ON e.approved_by = u.id 
-                     ORDER BY e.date_incurred DESC");
+$stmt = $pdo->query("
+    SELECT 
+        e.*, 
+        CONCAT(u.first_name, ' ', u.last_name) AS approved_by_name
+    FROM operational_expenses e
+    JOIN user_tables u ON e.approved_by = u.id
+    ORDER BY e.date_incurred DESC
+");
 $expenses = $stmt->fetchAll();
 
 // Calculate total

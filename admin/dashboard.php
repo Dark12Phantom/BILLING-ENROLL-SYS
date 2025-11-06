@@ -55,4 +55,11 @@ require_once '../includes/header.php';
         </div>
     </div>
 </div>
+
+<div class="row">
+    <div class="col-md-12">
+        <a href="./records/records.php" class="btn btn-primary" role="button">See Records</a>
+    </div>
+</div>
+
 <?php require_once '../includes/footer.php'; ?>

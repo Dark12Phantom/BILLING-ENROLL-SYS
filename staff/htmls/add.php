@@ -1,8 +1,13 @@
 <?php
-require_once '../includes/staff-auth.php';
+require_once '../../includes/auth.php';
 protectPage();
 
-require_once '../includes/staff-header.php';
+require_once '../../includes/header.php';
+
+$userId = $_SESSION['user_id'];
+$stmtUser = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM user_tables WHERE id = ?");
+$stmtUser->execute([$userId]);
+$createdBy = $stmtUser->fetchColumn();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $studentData = [
@@ -15,7 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'address' => $_POST['address'],
         'mobile_number' => $_POST['mobile_number'],
         'grade_level' => $_POST['grade_level'],
-        'section' => $_POST['section']
+        'section' => $_POST['section'],
+        'schoolYear'    => $_POST['school_year'],
+        'createdBy' => $createdBy
     ];
 
     $parentData = [
@@ -48,8 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo->beginTransaction();
 
-        $stmt = $pdo->prepare("INSERT INTO students (student_id, first_name, last_name, date_of_birth, gender, address, mobile_number, grade_level, section, idPicturePath) 
-                              VALUES (:student_id, :first_name, :last_name, :date_of_birth, :gender, :address, :mobile_number, :grade_level, :section, :idPicturePath)");
+        $stmt = $pdo->prepare("INSERT INTO students (student_id, first_name, last_name, date_of_birth, gender, address, mobile_number, grade_level, section, idPicturePath, schoolYear, createdBy) 
+                              VALUES (:student_id, :first_name, :last_name, :date_of_birth, :gender, :address, :mobile_number, :grade_level, :section, :idPicturePath, :schoolYear, :createdBy)");
         $stmt->execute($studentData);
         $studentId = $pdo->lastInsertId();
 
@@ -181,7 +188,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <option value="Other">Other</option>
                                         </select>
                                     </div>
+                                    <div class="mb-3">
+                                        <label for="schoolYear" class="form-label">School Year</label>
+                                        <input type="text" class="form-control" id="schoolYear" name="school_year" readonly>
+                                    </div>
                                 </div>
+
+                                <script>
+                                    const currentYear = new Date().getFullYear();
+                                    const nextYear = currentYear + 1;
+                                    document.getElementById("schoolYear").value = `${currentYear} - ${nextYear}`;
+                                </script>
 
                                 <div class="col-md-6">
                                     <h5 class="section-title">Additional Information</h5>
@@ -192,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                     <div class="mb-3">
                                         <label for="mobile_number" class="form-label">Mobile Number</label>
-                                        <input type="tel" maxlength="11" pattern="[0-9]{11}" class="form-control" id="mobile_number" name="mobile_number">
+                                        <input type="tel" class="form-control" maxlength="11" pattern="[0-9]{11}" id="mobile_number" name="mobile_number">
                                     </div>
                                     <div class="mb-3">
                                         <label for="grade_level" class="form-label">Grade Level</label>
@@ -228,7 +245,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                     <div class="mb-3">
                                         <label for="parent_mobile_number" class="form-label">Mobile Number</label>
-                                        <input type="tel" maxlength="11" pattern="[0-9]{11}" class="form-control" id="parent_mobile_number" name="parent_mobile_number" required>
+                                        <input type="tel" class="form-control" maxlength="11" pattern="[0-9]{11}" id="parent_mobile_number" name="parent_mobile_number" required>
                                     </div>
                                     <div class="mb-3">
                                         <label for="parent_email" class="form-label">Email Address</label>
@@ -243,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="mt-4 text-center">
                                 <button type="submit" class="btn btn-primary btn-lg">Save Student</button>
-                                <a href="index.php" class="btn btn-secondary btn-lg ms-2">Cancel</a>
+                                <a href="#" class="btn btn-secondary btn-lg ms-2">Cancel</a>
                             </div>
                         </form>
                     </div>
@@ -258,7 +275,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const imagePreview = document.getElementById('imagePreview');
             const uploadArea = document.getElementById('uploadArea');
             const uploadIcon = uploadArea.querySelector('.upload-icon');
-
             (function() {
                 const today = new Date();
                 const y = today.getFullYear();
@@ -328,4 +344,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </body>
 
-<?php require_once '../includes/staff-footer.php'; ?>
+<?php require_once '../../includes/footer.php'; ?>

@@ -4,6 +4,11 @@ protectPage();
 
 require_once '../../includes/header.php';
 
+$userId = $_SESSION['user_id'];
+$stmtUser = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM user_tables WHERE id = ?");
+$stmtUser->execute([$userId]);
+$createdBy = $stmtUser->fetchColumn();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $studentData = [
         'idPicturePath' => null,
@@ -15,7 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'address' => $_POST['address'],
         'mobile_number' => $_POST['mobile_number'],
         'grade_level' => $_POST['grade_level'],
-        'section' => $_POST['section']
+        'section' => $_POST['section'],
+        'schoolYear'    => $_POST['school_year'],
+        'createdBy' => $createdBy
     ];
 
     $parentData = [
@@ -48,8 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo->beginTransaction();
 
-        $stmt = $pdo->prepare("INSERT INTO students (student_id, first_name, last_name, date_of_birth, gender, address, mobile_number, grade_level, section, idPicturePath) 
-                              VALUES (:student_id, :first_name, :last_name, :date_of_birth, :gender, :address, :mobile_number, :grade_level, :section, :idPicturePath)");
+        $stmt = $pdo->prepare("INSERT INTO students (student_id, first_name, last_name, date_of_birth, gender, address, mobile_number, grade_level, section, idPicturePath, schoolYear, createdBy) 
+                              VALUES (:student_id, :first_name, :last_name, :date_of_birth, :gender, :address, :mobile_number, :grade_level, :section, :idPicturePath, :schoolYear, :createdBy)");
         $stmt->execute($studentData);
         $studentId = $pdo->lastInsertId();
 
@@ -181,7 +188,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <option value="Other">Other</option>
                                         </select>
                                     </div>
+                                    <div class="mb-3">
+                                        <label for="schoolYear" class="form-label">School Year</label>
+                                        <input type="text" class="form-control" id="schoolYear" name="school_year" readonly>
+                                    </div>
                                 </div>
+
+                                <script>
+                                    const currentYear = new Date().getFullYear();
+                                    const nextYear = currentYear + 1;
+                                    document.getElementById("schoolYear").value = `${currentYear} - ${nextYear}`;
+                                </script>
 
                                 <div class="col-md-6">
                                     <h5 class="section-title">Additional Information</h5>
