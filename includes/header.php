@@ -119,4 +119,4 @@
             </div>
         </div>
     </nav>
-    <div class="container mt-4">
+    <div class="container mt-4" style="flex: 1 0 auto;">
