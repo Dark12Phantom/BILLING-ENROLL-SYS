@@ -44,9 +44,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'grade_level' => trim($_POST['grade_level']),
         'section' => trim($_POST['section']),
         'status' => $_POST['status'],
-        'schoolYear' => !empty(trim($_POST['school_year'])) ? trim($_POST['school_year']) : null,
         'lastUpdated' => $today,
         'last_updatedBy' => $lastUpdatedBy
+    ];
+
+    $studentEnrollmentData = [
+        'student_id' => trim($_POST['student_id']),
+        'schoolYear' => !empty(trim($_POST['school_year'])) ? trim($_POST['school_year']) : null,
+        'status' => 'current'
     ];
 
     $parentData = [
@@ -136,7 +141,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                       section = :section,
                                       status = :status,
                                       idPicturePath = :idPicturePath,
-                                      schoolYear = :schoolYear,
                                       lastUpdated = :lastUpdated,
                                       last_updatedBy = :last_updatedBy
                                       WHERE id = :id");
@@ -152,13 +156,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                       grade_level = :grade_level,
                                       section = :section,
                                       status = :status,
-                                      schoolYear = :schoolYear,
                                       lastUpdated = :lastUpdated,
                                       last_updatedBy = :last_updatedBy
                                       WHERE id = :id");
             }
 
             $stmt->execute($studentData);
+
+            $stmt = $pdo->prepare("
+                SELECT school_year 
+                FROM enrollment_history
+                WHERE student_id = ? AND status = 'current'
+                LIMIT 1
+            ");
+            $stmt->execute([$studentId]);
+            $existingCurrentSY = $stmt->fetchColumn();
+
+            $currentSY = $studentEnrollmentData['schoolYear'];
+            if ($currentSY === $existingCurrentSY) {
+            } else if ($currentSY !== null && $currentSY !== '') {
+                $stmt = $pdo->prepare("
+                    UPDATE enrollment_history
+                    SET status = 'past'
+                    WHERE student_id = ?
+                ");
+                $stmt->execute([$studentId]);
+                $stmt = $pdo->prepare("
+                    SELECT id FROM enrollment_history
+                    WHERE student_id = ? AND school_year = ?
+                    LIMIT 1
+                ");
+                $stmt->execute([$studentId, $currentSY]);
+                $exists = $stmt->fetchColumn();
+
+                if ($exists) {
+                    $stmt = $pdo->prepare("
+                                        UPDATE enrollment_history
+                                        SET 
+                                            status = 'current',
+                                            created_at = CONVERT_TZ(NOW(), '+00:00', '+08:00')
+                                        WHERE id = ?
+                                    ");
+                    $stmt->execute([$exists]);
+                } else {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO enrollment_history (student_id, school_year, status)
+                        VALUES (?, ?, 'current')
+                    ");
+                    $stmt->execute([$studentId, $currentSY]);
+                }
+            }
 
             if ($parent) {
                 $parentData['id'] = $parent['id'];
@@ -191,6 +238,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = implode("<br>", $errors);
     }
 }
+
+$stmt = $pdo->prepare("
+    SELECT school_year 
+    FROM enrollment_history
+    WHERE student_id = ? AND status = 'current'
+    LIMIT 1
+");
+$stmt->execute([$student['id']]);
+$currentSY = $stmt->fetchColumn();
+
+$currentSY = $currentSY ?? '';
 
 require_once '../../includes/header.php';
 ?>
@@ -274,7 +332,7 @@ require_once '../../includes/header.php';
                     <div class="mb-3">
                         <label for="school_year" class="form-label">School Year</label>
                         <input type="text" class="form-control" id="school_year" name="school_year"
-                            value="<?= htmlspecialchars($student['schoolYear']) ?>" readonly>
+                            value="<?= htmlspecialchars($currentSY) ?>">
                     </div>
 
                     <script>
@@ -283,12 +341,8 @@ require_once '../../includes/header.php';
                             const statusSelect = document.getElementById("status");
 
                             function computeSchoolYear() {
-                                const now = new Date();
-                                const year = now.getFullYear();
-                                const month = now.getMonth() + 1;
-                                const start = month < 6 ? year - 1 : year;
-                                const end = start + 1;
-                                return `${start} - ${end}`;
+                                const year = new Date().getFullYear();
+                                return `${year} - ${year + 1}`;
                             }
 
                             if (statusSelect.value === "Active" && !schoolYearInput.value) {

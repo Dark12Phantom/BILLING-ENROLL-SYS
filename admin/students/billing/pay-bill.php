@@ -36,10 +36,7 @@ $stmt = $pdo->prepare("SELECT sf.id, f.name, sf.amount, sf.due_date
 $stmt->execute([$studentId]);
 $pendingFees = $stmt->fetchAll();
 
-$userId = $_SESSION['user_id'];
-$stmtUser = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM user_tables WHERE id = ?");
-$stmtUser->execute([$userId]);
-$receivedBy = $stmtUser->fetchColumn();
+$receivedBy = $_SESSION['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $paymentData = [

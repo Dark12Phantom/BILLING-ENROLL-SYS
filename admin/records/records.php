@@ -3,7 +3,7 @@ require_once '../../includes/auth.php';
 protectPage();
 require_once '../../includes/db.php';
 
-$stmt = $pdo->query("SELECT DISTINCT YEAR(created_at) AS year FROM students
+$stmt = $pdo->query("SELECT DISTINCT YEAR(created_at) AS year FROM enrollment_history
                         UNION
                         SELECT DISTINCT YEAR(date_incurred) AS year FROM operational_expenses
                         UNION

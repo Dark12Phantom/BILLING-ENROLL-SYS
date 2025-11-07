@@ -3,18 +3,31 @@
 require_once '../../includes/db.php';
 
 $year = isset($_GET['year']) ? (int) $_GET['year'] : 0;
+if ($year === 0) {
+    echo "<p class='text-center text-muted'>Invalid school year.</p>";
+    exit;
+}
 
-$stmt = $pdo->prepare("
+$sql = "
     SELECT 
-        *,
-        CASE 
-            WHEN YEAR(lastUpdated) > YEAR(created_at)
-                THEN YEAR(lastUpdated)
-            ELSE YEAR(created_at)
-        END AS enrollment_year
-    FROM students
-    HAVING enrollment_year = ?
-");
+        s.id,
+        s.student_id,
+        s.first_name,
+        s.last_name,
+        s.grade_level,
+        s.section,
+        s.status,
+        eh.school_year AS schoolYear,
+        eh.status AS enrollmentStatus,
+        eh.created_at AS enrollment_created_at
+    FROM enrollment_history eh
+    INNER JOIN students s 
+            ON s.id = eh.student_id
+    WHERE YEAR(eh.created_at) = ?
+    ORDER BY s.last_name, s.first_name
+";
+
+$stmt = $pdo->prepare($sql);
 $stmt->execute([$year]);
 $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
