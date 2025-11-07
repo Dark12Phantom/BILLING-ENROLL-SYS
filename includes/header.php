@@ -58,6 +58,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
+            <div id="schoolLogo"></div>
             <a class="navbar-brand" href="/BILLING-ENROLL-SYS/admin/dashboard.php">Enrollment System</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
