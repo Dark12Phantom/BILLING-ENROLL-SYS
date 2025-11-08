@@ -16,6 +16,9 @@ $amount = isset($_POST['amount']) && is_numeric($_POST['amount']) ? floatval($_P
 $paymentDate = $_POST['payment_date'];
 $referenceNumber = isset($_POST['reference_number']) ? trim($_POST['reference_number']) : '';
 $periodCovered = isset($_POST['period_covered']) ? trim($_POST['period_covered']) : '';
+$isRecurring = isset($_POST['is_recurring']) ? 1 : 0;
+$frequency = isset($_POST['frequency']) ? trim($_POST['frequency']) : '';
+$nextDueDate = isset($_POST['next_due_date']) ? trim($_POST['next_due_date']) : '';
 
 $errors = [];
 
@@ -30,9 +33,6 @@ if (strlen($referenceNumber) > 50) {
 } elseif (!preg_match('/^[A-Za-z0-9\-]+$/', $referenceNumber)) {
     $errors[] = "Reference number contains invalid characters.";
 }
-$periodCovered = trim($_POST['period_covered']);
-
-$errors = [];
 
 if (!in_array($type, ['Social Security System', 'Pag-IBIG', 'PhilHealth', 'Permit', 'Registration'])) {
     $errors[] = "Invalid expense type.";
@@ -46,10 +46,22 @@ if (empty($paymentDate) || !strtotime($paymentDate)) {
     $errors[] = "Valid payment date is required.";
 }
 
+// Validate recurring fields if recurring is checked
+if ($isRecurring) {
+    if (!in_array($frequency, ['monthly', 'quarterly', 'semi-annual', 'annual', 'weekly', 'yearly'])) {
+        $errors[] = "Invalid frequency selected.";
+    }
+    
+    if (empty($nextDueDate) || !strtotime($nextDueDate)) {
+        $errors[] = "Valid next due date is required for recurring payments.";
+    }
+}
+
 if (empty($errors)) {
     try {
         $pdo->beginTransaction();
 
+        // Insert into compliance_expenses
         $stmt = $pdo->prepare("
             INSERT INTO compliance_expenses 
             (type, amount, payment_date, reference_number, period_covered, paid_by) 
@@ -66,6 +78,7 @@ if (empty($errors)) {
 
         $complianceId = $pdo->lastInsertId();
 
+        // Create receipt
         $receiptNo = 'RCPT-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
         $stmt = $pdo->prepare("
             INSERT INTO receipts (expense_id, receipt_no, date_issued, amount, description, compliance_id)
@@ -78,6 +91,31 @@ if (empty($errors)) {
             "$type Payment for Period: $periodCovered",
             $complianceId
         ]);
+
+        // If recurring, add to billing_schedule
+        if ($isRecurring) {
+            $expenseName = $type; // Use the type directly as expense_name
+            
+            $stmt = $pdo->prepare("
+                INSERT INTO billing_schedule 
+                (expense_name, amount, category, frequency, next_due_date, last_run, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ");
+            
+            $stmt->execute([
+                $expenseName,
+                $amount,
+                'Compliance',
+                $frequency,
+                $nextDueDate,
+                $paymentDate,
+                'active'
+            ]);
+            
+            $_SESSION['success'] = "Compliance payment added successfully and scheduled for recurring payments.";
+        } else {
+            $_SESSION['success'] = "Compliance payment added successfully.";
+        }
 
         $pdo->commit();
     } catch (PDOException $e) {

@@ -2,9 +2,13 @@
 require_once '../../../includes/auth.php';
 protectPage();
 
-$stmt = $pdo->query("SELECT c.*, u.username as paid_by_name 
+$stmt = $pdo->query("SELECT c.*, 
+                     CASE 
+                         WHEN c.paid_by = 0 THEN 'System'
+                         ELSE u.username 
+                     END as paid_by_name 
                      FROM compliance_expenses c 
-                     JOIN users u ON c.paid_by = u.id 
+                     LEFT JOIN users u ON c.paid_by = u.id 
                      ORDER BY c.payment_date DESC");
 $expenses = $stmt->fetchAll();
 
@@ -28,6 +32,46 @@ $newRef = "REF-$today-$nextNum";
 
 require_once '../../../includes/header.php';
 ?>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle"></i> Success
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="successMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle"></i> Error
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="row">
     <div class="col-md-12">
@@ -151,6 +195,30 @@ require_once '../../../includes/header.php';
                         <label for="period_covered" class="form-label">Period Covered</label>
                         <input type="text" class="form-control" id="period_covered" name="period_covered">
                     </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_recurring" name="is_recurring" value="1">
+                            <label class="form-check-label" for="is_recurring">
+                                Recurring Payment
+                            </label>
+                        </div>
+                    </div>
+                    <div id="recurring_fields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="frequency" class="form-label">Frequency</label>
+                            <select class="form-select" id="frequency" name="frequency">
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="semi-annual">Semi-Annual</option>
+                                <option value="yearly">Yearly</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="next_due_date" class="form-label">Next Due Date</label>
+                            <input type="date" class="form-control" id="next_due_date" name="next_due_date">
+                        </div>
+                    </div>
                     <input type="hidden" name="paid_by" value="<?= $_SESSION['user_id'] ?>">
                 </div>
                 <div class="modal-footer">
@@ -164,10 +232,28 @@ require_once '../../../includes/header.php';
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Show success or error modal if session messages exist
+        <?php if (isset($_SESSION['success'])): ?>
+            document.getElementById('successMessage').textContent = <?= json_encode($_SESSION['success']) ?>;
+            new bootstrap.Modal(document.getElementById('successModal')).show();
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error'])): ?>
+            document.getElementById('errorMessage').innerHTML = <?= json_encode($_SESSION['error']) ?>;
+            new bootstrap.Modal(document.getElementById('errorModal')).show();
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
+
         document.getElementById('payment_date').valueAsDate = new Date();
 
         const typeSelect = document.getElementById('type');
         const refInput = document.getElementById('reference_number');
+        const isRecurringCheckbox = document.getElementById('is_recurring');
+        const recurringFields = document.getElementById('recurring_fields');
+        const frequencySelect = document.getElementById('frequency');
+        const nextDueDateInput = document.getElementById('next_due_date');
+        const paymentDateInput = document.getElementById('payment_date');
 
         function updateReference() {
             const today = new Date();
@@ -202,7 +288,54 @@ require_once '../../../includes/header.php';
             refInput.value = `REF-${shortType}-${ymd}-000001`;
         }
 
+        function calculateNextDueDate() {
+            const paymentDate = new Date(paymentDateInput.value);
+            if (!paymentDate || isNaN(paymentDate)) return;
+
+            const frequency = frequencySelect.value;
+            let nextDate = new Date(paymentDate);
+
+            switch (frequency) {
+                case 'weekly':
+                    nextDate.setDate(nextDate.getDate() + 7);
+                    break;
+                case 'monthly':
+                    nextDate.setMonth(nextDate.getMonth() + 1);
+                    break;
+                case 'quarterly':
+                    nextDate.setMonth(nextDate.getMonth() + 3);
+                    break;
+                case 'semi-annual':
+                    nextDate.setMonth(nextDate.getMonth() + 6);
+                    break;
+                case 'annual':
+                case 'yearly':
+                    nextDate.setFullYear(nextDate.getFullYear() + 1);
+                    break;
+            }
+
+            const year = nextDate.getFullYear();
+            const month = String(nextDate.getMonth() + 1).padStart(2, '0');
+            const day = String(nextDate.getDate()).padStart(2, '0');
+            nextDueDateInput.value = `${year}-${month}-${day}`;
+        }
+
+        isRecurringCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                recurringFields.style.display = 'block';
+                frequencySelect.required = true;
+                nextDueDateInput.required = true;
+                calculateNextDueDate();
+            } else {
+                recurringFields.style.display = 'none';
+                frequencySelect.required = false;
+                nextDueDateInput.required = false;
+            }
+        });
+
         typeSelect.addEventListener('change', updateReference);
+        frequencySelect.addEventListener('change', calculateNextDueDate);
+        paymentDateInput.addEventListener('change', calculateNextDueDate);
 
         updateReference();
     });

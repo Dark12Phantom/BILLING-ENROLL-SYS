@@ -10,6 +10,7 @@ require_once '../../../includes/header.php';
         <h2>Auto-Billing Scheduler</h2>
         <hr>
 
+        <!-- Pending Bills Section -->
         <div class="card mb-4">
             <div class="card-header">
                 <div class="row">
@@ -42,17 +43,17 @@ require_once '../../../includes/header.php';
                             <?php
                             $today = date('Y-m-d');
                             $bills = $pdo->query("
-                SELECT * FROM billing_schedule
-                WHERE status='active' AND next_due_date <= '$today'
-                ORDER BY category, next_due_date ASC
-              ")->fetchAll();
+                                SELECT * FROM billing_schedule
+                                WHERE status='active' AND next_due_date <= '$today'
+                                ORDER BY category, next_due_date ASC
+                            ")->fetchAll();
 
                             if (!$bills):
                             ?>
                                 <tr>
                                     <td colspan="5" class="text-center text-muted">No bills due for auto-billing today.</td>
                                 </tr>
-                                <?php else:
+                            <?php else:
                                 foreach ($bills as $bill): ?>
                                     <tr>
                                         <td><?= htmlspecialchars($bill['category']) ?></td>
@@ -75,7 +76,68 @@ require_once '../../../includes/header.php';
                             role="progressbar" style="width: 0%"></div>
                     </div>
                 </div>
+            </div>
+        </div>
 
+        <!-- Future Scheduled Bills Section -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Future Scheduled Bills</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Expense Name</th>
+                                <th>Amount</th>
+                                <th>Next Due Date</th>
+                                <th>Frequency</th>
+                                <th>Last Run</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $futureBills = $pdo->query("
+                                SELECT * FROM billing_schedule
+                                WHERE status='active' AND next_due_date > '$today'
+                                ORDER BY next_due_date ASC
+                            ")->fetchAll();
+
+                            if (!$futureBills):
+                            ?>
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No future bills scheduled.</td>
+                                </tr>
+                            <?php else:
+                                foreach ($futureBills as $bill): 
+                                    $daysUntil = (strtotime($bill['next_due_date']) - strtotime($today)) / 86400;
+                                    $badgeClass = $daysUntil <= 7 ? 'bg-warning' : 'bg-info';
+                            ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($bill['category']) ?></td>
+                                        <td><?= htmlspecialchars($bill['expense_name']) ?></td>
+                                        <td>₱<?= number_format($bill['amount'], 2) ?></td>
+                                        <td>
+                                            <?= date('M d, Y', strtotime($bill['next_due_date'])) ?>
+                                            <span class="badge <?= $badgeClass ?> ms-2">
+                                                <?= floor($daysUntil) ?> days
+                                            </span>
+                                        </td>
+                                        <td><?= ucfirst($bill['frequency']) ?></td>
+                                        <td><?= $bill['last_run'] ? date('M d, Y', strtotime($bill['last_run'])) : 'Never' ?></td>
+                                        <td>
+                                            <span class="badge bg-success"><?= ucfirst($bill['status']) ?></span>
+                                        </td>
+                                    </tr>
+                            <?php endforeach;
+                            endif;
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -155,6 +217,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-
 
 <?php require '../../../includes/footer.php'; ?>
