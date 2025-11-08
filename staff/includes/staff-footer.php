@@ -1,6 +1,6 @@
     </div>
         
-    <footer class="mt-5 py-3" style="background-color: var(--secondary-color); color: white;">
+    <footer class="py-3" style="background-color: var(--secondary-color); color: white;">
         <div class="container text-center">
             <small>&copy; <?= date('Y') ?> Enrollment and Billing System</small>
         </div>
