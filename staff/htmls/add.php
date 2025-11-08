@@ -1,8 +1,8 @@
 <?php
-require_once '../../includes/auth.php';
+require_once '../includes/staff-auth.php';
 protectPage();
 
-require_once '../../includes/header.php';
+require_once '../includes/staff-header.php';
 
 $userId = $_SESSION['user_id'];
 $stmtUser = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM user_tables WHERE id = ?");
@@ -21,8 +21,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'mobile_number' => $_POST['mobile_number'],
         'grade_level' => $_POST['grade_level'],
         'section' => $_POST['section'],
-        'schoolYear'    => $_POST['school_year'],
         'createdBy' => $createdBy
+    ];
+
+    $studentEnrollmentData = [
+        'student_id' => $_POST['student_id'],
+        'school_year' => $_POST['school_year'],
+        'status' => 'current'
     ];
 
     $parentData = [
@@ -34,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'address' => $_POST['parent_address']
     ];
 
-    $uploadDir = 'uploads/studentProfiles/';
+    $uploadDir = '../../admin/students/uploads/studentProfiles';
     if (!file_exists($uploadDir)) {
         mkdir($uploadDir, 0777, true);
     }
@@ -52,13 +57,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+
+    $check = $pdo->prepare("SELECT id FROM students WHERE student_id = ?");
+    $check->execute([$studentData['student_id']]);
+
+    if ($check->fetch()) {
+        $_SESSION['error'] = "This student already exists. Update their record instead.";
+        echo '
+                <div class="container mt-5">
+                    <div class="alert alert-danger text-center shadow-sm" role="alert" style="max-width:600px;margin:auto;">
+                        <h4 class="alert-heading">Student Already Exists</h4>
+                        <p class="mb-0">This pupil has been recorded before.</strong></p>
+                    </div>
+                </div>
+            ';
+        exit();
+    }
+
     try {
         $pdo->beginTransaction();
 
-        $stmt = $pdo->prepare("INSERT INTO students (student_id, first_name, last_name, date_of_birth, gender, address, mobile_number, grade_level, section, idPicturePath, schoolYear, createdBy) 
-                              VALUES (:student_id, :first_name, :last_name, :date_of_birth, :gender, :address, :mobile_number, :grade_level, :section, :idPicturePath, :schoolYear, :createdBy)");
+        $stmt = $pdo->prepare("INSERT INTO students (student_id, first_name, last_name, date_of_birth, gender, address, mobile_number, grade_level, section, idPicturePath, createdBy) 
+                              VALUES (:student_id, :first_name, :last_name, :date_of_birth, :gender, :address, :mobile_number, :grade_level, :section, :idPicturePath, :createdBy)");
         $stmt->execute($studentData);
         $studentId = $pdo->lastInsertId();
+
+        $studentEnrollmentData['student_id'] = $studentId;
+        $stmt = $pdo->prepare("INSERT INTO enrollment_history (student_id, school_year, status)
+                                VALUES (:student_id, :school_year, :status)");
+        $stmt->execute($studentEnrollmentData);
 
         $parentData['student_id'] = $studentId;
         $stmt = $pdo->prepare("INSERT INTO parents (student_id, first_name, last_name, relationship, mobile_number, email, address) 
@@ -344,4 +371,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </body>
 
-<?php require_once '../../includes/footer.php'; ?>
+<?php require_once '../includes/staff-footer.php'; ?>
