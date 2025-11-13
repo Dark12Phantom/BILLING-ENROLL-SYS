@@ -4,7 +4,7 @@ protectPage();
 
 require_once '../../includes/header.php';
 
-// Search functionality
+// Search and filter
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 $query = "SELECT ut.*, u.last_login 
           FROM user_tables ut
@@ -23,29 +23,25 @@ $users = $stmt->fetchAll();
 
 <div class="row">
     <div class="col-md-12">
-        <h2>Staffs</h2>
+        <h2>Staff Record</h2>
         <hr>
 
-        <div class="card mb-4">
-            <div class="card-header">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>User List</h5>
-                    </div>
-                    <div class="col-md-6">
-                        <form class="form-inline float-end">
-                            <div class="input-group">
-                                <input type="text" class="form-control" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>">
-                                <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
-                                <a href="add.php" class="btn btn-success ms-2"><i class="fas fa-plus"></i>Add User</a>
-                            </div>
-                        </form>
-                    </div>
+        <!-- Search + Filter Bar -->
+        <div class="mb-3">
+            <form class="form-inline d-flex justify-content-between align-items-center" method="get">
+                <div class="input-group" style="max-width: 400px;">
+                    <input type="text" class="form-control" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>">
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+                    <a href="add.php" class="btn btn-success ms-2"><i class="fas fa-plus"></i> Add Staff</a>
                 </div>
-            </div>
+            </form>
+        </div>
+
+        <!-- Staff Table -->
+        <div class="card mb-4">
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped align-middle">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -53,8 +49,8 @@ $users = $stmt->fetchAll();
                                 <th>Staff ID</th>
                                 <th>Account Type</th>
                                 <th>Status</th>
-                                <th>Actions</th>
                                 <th>Last Login</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>

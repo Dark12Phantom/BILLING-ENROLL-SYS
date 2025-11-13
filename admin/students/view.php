@@ -111,7 +111,7 @@ require_once '../../includes/header.php';
             <div class="col-md-6">
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
-                        <h5>Parents/Guardian Information</h5>
+                        <h5>Emergency Contact</h5>
                     </div>
                     <div class="card-body">
                         <?php if ($parent): ?>

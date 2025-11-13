@@ -370,7 +370,7 @@ require_once '../../includes/header.php';
                 </div>
 
                 <div class="col-md-6">
-                    <h4>Parent/Guardian Information</h4>
+                    <h4>Emergency Contact Information</h4>
                     <div class="mb-3">
                         <label for="parent_first_name" class="form-label">First Name</label>
                         <input type="text" class="form-control" id="parent_first_name" name="parent_first_name"

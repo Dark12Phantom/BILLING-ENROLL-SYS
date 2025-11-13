@@ -21,6 +21,7 @@ require_once '../../../includes/header.php';
         <h2>Fee Management</h2>
         <hr>
 
+        <!-- Tabs -->
         <ul class="nav nav-tabs mb-4" id="feeTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="types-tab" data-bs-toggle="tab" data-bs-target="#types" type="button">Fee Types</button>
@@ -31,24 +32,20 @@ require_once '../../../includes/header.php';
         </ul>
 
         <div class="tab-content" id="feeTabsContent">
+
+            <!-- Fee Types Tab -->
             <div class="tab-pane fade show active" id="types" role="tabpanel">
                 <div class="card mb-4">
-                    <div class="card-header">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5>Fee Types</h5>
-                            </div>
-                            <div class="col-md-6 text-end">
-                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFeeModal">
-                                    <i class="fas fa-plus"></i> Add Fee Type
-                                </button>
-                            </div>
-                        </div>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Fee Types</h5>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFeeModal">
+                            <i class="fas fa-plus"></i> Add Fee Type
+                        </button>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-light">
                                     <tr>
                                         <th>Name</th>
                                         <th>Description</th>
@@ -66,39 +63,35 @@ require_once '../../../includes/header.php';
                                             <td>₱<?= number_format($fee['amount'], 2) ?></td>
                                             <td><?= $fee['is_recurring'] ? 'Yes' : 'No' ?></td>
                                             <td><?= htmlspecialchars($fee['frequency']) ?></td>
-                                            <td>
+                                            <td class="text-nowrap">
                                                 <a href="edit-fee.php?id=<?= $fee['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-                                                <a href="delete-fee.php?id=<?= $fee['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
+                                                <a href="delete-fee.php?id=<?= $fee['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
+                            <?php if (empty($feeTypes)): ?>
+                                <p class="text-center text-muted mt-3">No fee types found.</p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Assigned Fees Tab -->
             <div class="tab-pane fade" id="assigned" role="tabpanel">
                 <div class="card">
-                    <div class="card-header">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5>Assigned Student Fees</h5>
-                            </div>
-                            <div class="col-md-6 text-end">
-                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignFeeModal">
-                                    <i class="fas fa-plus"></i> Assign Fee
-                                </button>
-                            </div>
-                        </div>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Assigned Student Fees</h5>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignFeeModal">
+                            <i class="fas fa-plus"></i> Assign Fee
+                        </button>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-light">
                                     <tr>
                                         <th>Student</th>
                                         <th>Fee</th>
@@ -111,169 +104,35 @@ require_once '../../../includes/header.php';
                                 <tbody>
                                     <?php foreach ($studentFees as $fee): ?>
                                         <tr>
-                                            <td><?= htmlspecialchars($fee['last_name']) ?>, <?= htmlspecialchars($fee['first_name']) ?> (<?= htmlspecialchars($fee['student_id']) ?>)</td>
+                                            <td><?= htmlspecialchars($fee['last_name']) ?>, <?= htmlspecialchars($fee['first_name']) ?> <small class="text-muted">(<?= htmlspecialchars($fee['student_id']) ?>)</small></td>
                                             <td><?= htmlspecialchars($fee['fee_name']) ?></td>
                                             <td>₱<?= number_format($fee['amount'], 2) ?></td>
                                             <td><?= date('M d, Y', strtotime($fee['due_date'])) ?></td>
                                             <td>
-                                                <span class="badge bg-<?=
-                                                                        $fee['status'] == 'Paid' ? 'success' : ($fee['status'] == 'Overdue' ? 'danger' : 'warning')
-                                                                        ?>">
+                                                <span class="badge bg-<?= $fee['status'] == 'Paid' ? 'success' : ($fee['status'] == 'Overdue' ? 'danger' : 'warning') ?>">
                                                     <?= htmlspecialchars($fee['status']) ?>
                                                 </span>
                                             </td>
-                                            <td>
+                                            <td class="text-nowrap">
                                                 <a href="edit-assigned-fee.php?id=<?= $fee['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
-                                                <a href="delete-assigned-fee.php?id=<?= $fee['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
+                                                <a href="delete-assigned-fee.php?id=<?= $fee['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
+                                <?php if (empty($studentFees)): ?>
+                                    <p class="text-center text-muted mt-3">No assigned fees found.</p>
+                                <?php endif; ?>
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="addFeeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Fee Type</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="add-fee.php" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Fee Name</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="2"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="amount" class="form-label">Amount</label>
-                        <input type="number" min="1" max="100000" class="form-control" id="amount" name="amount" required>
-                    </div>
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="is_recurring" name="is_recurring">
-                            <label class="form-check-label" for="is_recurring">Recurring Fee</label>
-                        </div>
-                    </div>
-                    <div class="mb-3" id="frequency-container" style="display: none;">
-                        <label for="frequency" class="form-label">Frequency</label>
-                        <select class="form-select" id="frequency" name="frequency">
-                            <option value="Monthly">Monthly</option>
-                            <option value="Quarterly">Quarterly</option>
-                            <option value="Annual">Annual</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Fee</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Assign Fee Modal -->
-<div class="modal fade" id="assignFeeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Assign Fee to Student</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="assign-fee.php" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="student" class="form-label">Student</label>
-                        <select class="form-select" id="student" name="student_id" required>
-                            <option value="">Select Student</option>
-                            <?php
-                            $stmt = $pdo->query("SELECT id, first_name, last_name, student_id FROM students ORDER BY last_name, first_name");
-                            while ($student = $stmt->fetch()): ?>
-                                <option value="<?= $student['id'] ?>">
-                                    <?= htmlspecialchars($student['last_name']) ?>, <?= htmlspecialchars($student['first_name']) ?> (<?= htmlspecialchars($student['student_id']) ?>)
-                                </option>
-                            <?php endwhile; ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="fee_id" class="form-label">Fee Type</label>
-                        <select class="form-select" id="fee_id" name="fee_id" required>
-                            <option value="">Select Fee</option>
-                            <?php foreach ($feeTypes as $fee): ?>
-                                <option value="<?= $fee['id'] ?>">
-                                    <?= htmlspecialchars($fee['name']) ?> (₱<?= number_format($fee['amount'], 2) ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="due_date" class="form-label">Due Date</label>
-                        <input type="date" class="form-control" id="due_date" name="due_date" required>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label">Discount(s)</label>
-                            <div class="form-check">
-                                <input class="form-check-input discount-checkbox" name="discounts[]" type="checkbox" value="referral" id="discount_referral">
-                                <label class="form-check-label" for="discount_referral">Referral Discount (₱500.00)</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input discount-checkbox" name="discounts[]" type="checkbox" value="earlybird" id="discount_earlybird">
-                                <label class="form-check-label" for="discount_earlybird">Earlybird Discount (₱500.00)</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input discount-checkbox" name="discounts[]" type="checkbox" value="sibling" id="discount_sibling">
-                                <label class="form-check-label" for="discount_sibling">Sibling Discount (₱500.00)</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input discount-checkbox" name="discounts[]" type="checkbox" value="fullpayment" id="discount_fullpayment">
-                                <label class="form-check-label" for="discount_fullpayment">Full Payment Discount (₱1,000.00)</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <small class="text-muted">Original Amount:</small><br>
-                                        <span id="original_amount" class="fw-bold">₱0.00</span>
-                                    </div>
-                                    <div class="col-6">
-                                        <small class="text-muted">Discount:</small><br>
-                                        <span id="discount_amount" class="text-success">-₱0.00</span>
-                                    </div>
-                                </div>
-                                <hr class="my-2">
-                                <div class="text-center">
-                                    <small class="text-muted">Final Amount:</small><br>
-                                    <span id="final_amount" class="h5 text-primary">₱0.00</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Assign Fee</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

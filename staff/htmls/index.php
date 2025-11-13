@@ -1,20 +1,33 @@
 <?php
-require_once '../includes/staff-auth.php';
+require_once '../../includes/auth.php';
 protectPage();
 
-require_once '../includes/staff-header.php';
+require_once '../../includes/header.php';
 
-// Search functionality
+// Search and grade filter
 $search = isset($_GET['search']) ? $_GET['search'] : '';
+$filterGrade = isset($_GET['grade_level']) ? $_GET['grade_level'] : '';
+
+// Fetch existing grade levels dynamically
+$gradeQuery = $pdo->query("SELECT DISTINCT grade_level FROM students ORDER BY grade_level ASC");
+$gradeLevels = $gradeQuery->fetchAll(PDO::FETCH_COLUMN);
+
+// Main query
 $query = "SELECT * FROM students WHERE 
-          first_name LIKE ? OR 
-          last_name LIKE ? OR 
-          student_id LIKE ? OR
-          grade_level LIKE ? OR
-          section LIKE ?
-          ORDER BY last_name, first_name";
+          (first_name LIKE ? OR 
+           last_name LIKE ? OR 
+           student_id LIKE ? OR
+           grade_level LIKE ? OR
+           section LIKE ?)";
+
 $params = ["%$search%", "%$search%", "%$search%", "%$search%", "%$search%"];
 
+if ($filterGrade) {
+    $query .= " AND grade_level = ?";
+    $params[] = $filterGrade;
+}
+
+$query .= " ORDER BY grade_level, last_name, first_name";
 $stmt = $pdo->prepare($query);
 $stmt->execute($params);
 $students = $stmt->fetchAll();
@@ -24,27 +37,34 @@ $students = $stmt->fetchAll();
     <div class="col-md-12">
         <h2>Student Record</h2>
         <hr>
-        
-        <div class="card mb-4">
-            <div class="card-header">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>Student List</h5>
-                    </div>
-                    <div class="col-md-6">
-                        <form class="form-inline float-end">
-                            <div class="input-group">
-                                <input type="text" class="form-control" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>">
-                                <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
-                                <a href="add.php" class="btn btn-success ms-2"><i class="fas fa-plus"></i> Add Student</a>
-                            </div>
-                        </form>
-                    </div>
+
+        <!-- Search + Filter Bar -->
+        <div class="mb-3">
+            <form class="form-inline d-flex justify-content-between align-items-center" method="get">
+                <div class="input-group" style="max-width: 400px;">
+                    <input type="text" class="form-control" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>">
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+                    <a href="add.php" class="btn btn-success ms-2"><i class="fas fa-plus"></i> Add Student</a>
                 </div>
-            </div>
+
+                <!-- Grade Level Dropdown -->
+                <div class="ms-3">
+                    <select name="grade_level" class="form-select" style="width: 200px;" onchange="this.form.submit()">
+                        <option value="">All Grade Levels</option>
+                        <?php foreach ($gradeLevels as $grade): ?>
+                            <option value="<?= htmlspecialchars($grade) ?>" <?= $filterGrade == $grade ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($grade) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <div class="card mb-4">
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-striped align-middle">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -56,25 +76,29 @@ $students = $stmt->fetchAll();
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($students as $student): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($student['student_id']) ?></td>
-                                    <td><?= htmlspecialchars($student['last_name']) ?>, <?= htmlspecialchars($student['first_name']) ?></td>
-                                    <td><?= htmlspecialchars($student['grade_level']) ?></td>
-                                    <td><?= htmlspecialchars($student['section']) ?></td>
-                                    <td>
-                                        <span class="badge bg-<?= 
-                                            $student['status'] == 'Active' ? 'success' : 
-                                            ($student['status'] == 'Inactive' ? 'warning' : 'secondary') 
-                                        ?>">
-                                            <?= htmlspecialchars($student['status']) ?>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <a href="view.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-info"><i class="fas fa-eye"></i> View</a>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
+                            <?php if (empty($students)): ?>
+                                <tr><td colspan="6" class="text-center text-muted">No students found.</td></tr>
+                            <?php else: ?>
+                                <?php foreach ($students as $student): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($student['student_id']) ?></td>
+                                        <td><?= htmlspecialchars($student['last_name']) ?>, <?= htmlspecialchars($student['first_name']) ?></td>
+                                        <td><?= htmlspecialchars($student['grade_level']) ?></td>
+                                        <td><?= htmlspecialchars($student['section']) ?></td>
+                                        <td>
+                                            <span class="badge bg-<?= 
+                                                $student['status'] == 'Active' ? 'success' : 
+                                                ($student['status'] == 'Inactive' ? 'warning' : 'secondary') 
+                                            ?>">
+                                                <?= htmlspecialchars($student['status']) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="./view.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -83,4 +107,4 @@ $students = $stmt->fetchAll();
     </div>
 </div>
 
-<?php require_once '../includes/staff-footer.php'; ?>
+<?php require_once '../../includes/footer.php'; ?>
