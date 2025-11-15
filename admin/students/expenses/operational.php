@@ -186,7 +186,7 @@ require_once '../../../includes/header.php';
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="evidence" class="form-label">Evidence (Receipt/Invoice)</label>
-                            <input type="file" class="form-control" id="evidence" name="evidence" accept=".jpg,.jpeg,.png,.pdf">
+                            <input type="file" class="form-control" id="evidence" name="evidence" accept=".jpg,.jpeg,.png,.pdf" required>
                             <small class="text-muted">Accepted formats: JPG, PNG, PDF (Max 2MB)</small>
                         </div>
                     </div>

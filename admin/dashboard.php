@@ -18,7 +18,7 @@ require_once '../includes/header.php';
             <div class="card-body">
                 <h5 class="card-title">Total Students</h5>
                 <?php
-                $stmt = $pdo->query("SELECT COUNT(*) FROM students");
+                $stmt = $pdo->query("SELECT COUNT(*) FROM students WHERE isDeleted = '0'");
                 $count = $stmt->fetchColumn();
                 ?>
                 <h2 class="card-text"><?php echo $count; ?></h2>

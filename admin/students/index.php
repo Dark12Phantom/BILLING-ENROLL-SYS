@@ -8,27 +8,52 @@ require_once '../../includes/header.php';
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 $filterGrade = isset($_GET['grade_level']) ? $_GET['grade_level'] : '';
 
-$gradeQuery = $pdo->query("SELECT DISTINCT grade_level FROM students ORDER BY grade_level ASC");
+$gradeQuery = $pdo->query("SELECT DISTINCT grade_level 
+                           FROM students 
+                           WHERE isDeleted = 0
+                           ORDER BY grade_level ASC");
 $gradeLevels = $gradeQuery->fetchAll(PDO::FETCH_COLUMN);
 
-$query = "SELECT * FROM students WHERE 
-          (first_name LIKE ? OR 
-           last_name LIKE ? OR 
-           student_id LIKE ? OR
-           grade_level LIKE ? OR
-           section LIKE ?)";
+if ($filterGrade === "__ARCHIVED__") {
 
-$params = ["%$search%", "%$search%", "%$search%", "%$search%", "%$search%"];
+    $query = "SELECT * FROM students 
+              WHERE isDeleted = 1
+              ORDER BY grade_level, last_name, first_name";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute();
+    $students = $stmt->fetchAll();
+} else {
+
+    // NORMAL QUERY: only active students
+    $query = "SELECT * FROM students 
+              WHERE isDeleted = 0 
+              AND (
+                   first_name LIKE ? OR
+                   last_name LIKE ? OR
+                   student_id LIKE ? OR
+                   grade_level LIKE ? OR
+                   section LIKE ?
+              )";
+
+    $params = ["%$search%", "%$search%", "%$search%", "%$search%", "%$search%"];
+
+    if (!empty($filterGrade)) {
+        $query .= " AND grade_level = ?";
+        $params[] = $filterGrade;
+    }
+
+    $query .= " ORDER BY grade_level, last_name, first_name";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
+    $students = $stmt->fetchAll();
+}
 
 if ($filterGrade) {
     $query .= " AND grade_level = ?";
     $params[] = $filterGrade;
 }
-
-$query .= " ORDER BY grade_level, last_name, first_name";
-$stmt = $pdo->prepare($query);
-$stmt->execute($params);
-$students = $stmt->fetchAll();
 ?>
 
 <div class="row">
@@ -46,6 +71,11 @@ $students = $stmt->fetchAll();
                 <div class="ms-3">
                     <select name="grade_level" class="form-select" style="width: 200px;" onchange="this.form.submit()">
                         <option value="">All Grade Levels</option>
+
+                        <option value="__ARCHIVED__" <?= $filterGrade == '__ARCHIVED__' ? 'selected' : '' ?>>
+                            Archived
+                        </option>
+
                         <?php foreach ($gradeLevels as $grade): ?>
                             <option value="<?= htmlspecialchars($grade) ?>" <?= $filterGrade == $grade ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($grade) ?>
@@ -72,7 +102,9 @@ $students = $stmt->fetchAll();
                         </thead>
                         <tbody>
                             <?php if (empty($students)): ?>
-                                <tr><td colspan="6" class="text-center text-muted">No students found.</td></tr>
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No students found.</td>
+                                </tr>
                             <?php else: ?>
                                 <?php foreach ($students as $student): ?>
                                     <tr>
@@ -81,17 +113,27 @@ $students = $stmt->fetchAll();
                                         <td><?= htmlspecialchars($student['grade_level']) ?></td>
                                         <td><?= htmlspecialchars($student['section']) ?></td>
                                         <td>
-                                            <span class="badge bg-<?= 
-                                                $student['status'] == 'Active' ? 'success' : 
-                                                ($student['status'] == 'Inactive' ? 'warning' : 'secondary') 
-                                            ?>">
+                                            <span class="badge bg-<?=
+                                                                    $student['status'] == 'Active' ? 'success' : ($student['status'] == 'Inactive' ? 'warning' : 'secondary')
+                                                                    ?>">
                                                 <?= htmlspecialchars($student['status']) ?>
                                             </span>
                                         </td>
+
                                         <td>
-                                            <a href="./view.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
-                                            <a href="./edit.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
-                                            <a href="./delete.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></a>
+                                            <a href="./view.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+
+                                            <?php if ($filterGrade !== "__ARCHIVED__"): ?>
+                                                <a href="./edit.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-warning">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="./delete.php?id=<?= $student['id'] ?>" class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Are you sure?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

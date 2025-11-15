@@ -43,7 +43,7 @@ require_once '../includes/staff-header.php';
                     <div class="card-body">
                         <div class="text-center mb-4">
                             <?php if (!empty($student['idPicturePath'])): ?>
-                                <img src="../../admin/students/uploads/studentProfiles/<?= htmlspecialchars($student['idPicturePath']) ?>" 
+                                <img src="../../uploads/studentProfiles/<?= htmlspecialchars($student['idPicturePath']) ?>" 
                                      alt="Student ID Picture" 
                                      class="img-thumbnail" 
                                      style="width: 200px; height: 200px; object-fit: cover;">

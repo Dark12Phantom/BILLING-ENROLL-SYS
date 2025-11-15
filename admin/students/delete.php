@@ -14,21 +14,25 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
         try {
             $pdo->beginTransaction();
 
-            // First fetch student to know if he hath a profile picture
-            $stmt = $pdo->prepare("SELECT idPicturePath FROM students WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT idPicturePath FROM students WHERE id = ? AND isDeleted = 0");
             $stmt->execute([$studentId]);
             $student = $stmt->fetch();
 
             if ($student) {
-                // Delete parent first (FK constraint may require this)
-                $stmt = $pdo->prepare("DELETE FROM parents WHERE student_id = ?");
+                $stmt = $pdo->prepare("
+                    UPDATE parents 
+                    SET isDeleted = 1 
+                    WHERE student_id = ?
+                ");
                 $stmt->execute([$studentId]);
 
-                // Delete student
-                $stmt = $pdo->prepare("DELETE FROM students WHERE id = ?");
+                $stmt = $pdo->prepare("
+                    UPDATE students 
+                    SET isDeleted = 1 
+                    WHERE id = ?
+                ");
                 $stmt->execute([$studentId]);
 
-                // Remove profile picture if it existeth
                 if (!empty($student['idPicturePath'])) {
                     $filePath = 'uploads/studentProfiles/' . $student['idPicturePath'];
                     if (file_exists($filePath)) {
@@ -37,10 +41,9 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                 }
 
                 $pdo->commit();
-
-                $success = "Student deleted successfully!";
+                $success = "Student moved to deleted records successfully!";
             } else {
-                $error = "Student not found.";
+                $error = "Student not found or already archived.";
             }
         } catch (PDOException $e) {
             $pdo->rollBack();
@@ -54,7 +57,7 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
 
 <div class="row">
     <div class="col-md-8 offset-md-2">
-        <h2 class="text-center mb-4">Delete Student</h2>
+        <h2 class="text-center mb-4">Archive Student</h2>
 
         <?php if ($error): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
@@ -66,9 +69,9 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
         <?php else: ?>
             <div class="card shadow">
                 <div class="card-body text-center">
-                    <p>Are you sure you want to delete this student and all related parent information?</p>
+                    <p>Archive student and parent record?</p>
                     <form method="POST">
-                        <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</button>
+                        <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Confirm</button>
                         <a href="index.php" class="btn btn-secondary">Cancel</a>
                     </form>
                 </div>

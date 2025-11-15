@@ -33,7 +33,7 @@ require_once '../../includes/header.php';
     <div class="col-md-12">
         <h2>Student Overview</h2>
         <hr>
-        
+
         <div class="row">
             <div class="col-md-6">
                 <div class="card mb-4">
@@ -43,18 +43,18 @@ require_once '../../includes/header.php';
                     <div class="card-body">
                         <div class="text-center mb-4">
                             <?php if (!empty($student['idPicturePath'])): ?>
-                                <img src="uploads/studentProfiles/<?= htmlspecialchars($student['idPicturePath']) ?>" 
-                                     alt="Student ID Picture" 
-                                     class="img-thumbnail" 
-                                     style="width: 200px; height: 200px; object-fit: cover;">
+                                <img src="../../uploads/studentProfiles/<?= htmlspecialchars($student['idPicturePath']) ?>"
+                                    alt="Student ID Picture"
+                                    class="img-thumbnail"
+                                    style="width: 200px; height: 200px; object-fit: cover;">
                             <?php else: ?>
-                                <div class="bg-light d-flex align-items-center justify-content-center" 
-                                     style="width: 200px; height: 200px; margin: 0 auto;">
+                                <div class="bg-light d-flex align-items-center justify-content-center"
+                                    style="width: 200px; height: 200px; margin: 0 auto;">
                                     <span class="text-muted">No ID Picture</span>
                                 </div>
                             <?php endif; ?>
                         </div>
-                        
+
                         <table class="table">
                             <tr>
                                 <th>Student ID:</th>
@@ -95,10 +95,9 @@ require_once '../../includes/header.php';
                             <tr>
                                 <th>Status:</th>
                                 <td>
-                                    <span class="badge bg-<?= 
-                                        $student['status'] == 'Active' ? 'success' : 
-                                        ($student['status'] == 'Inactive' ? 'warning' : 'secondary') 
-                                    ?>">
+                                    <span class="badge bg-<?=
+                                                            $student['status'] == 'Active' ? 'success' : ($student['status'] == 'Inactive' ? 'warning' : 'secondary')
+                                                            ?>">
                                         <?= htmlspecialchars($student['status']) ?>
                                     </span>
                                 </td>
@@ -107,7 +106,7 @@ require_once '../../includes/header.php';
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-6">
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
@@ -142,7 +141,7 @@ require_once '../../includes/header.php';
                         <?php endif; ?>
                     </div>
                 </div>
-                
+
                 <div class="card">
                     <div class="card-header bg-primary text-white">
                         <h5>Fee Status</h5>
@@ -166,10 +165,9 @@ require_once '../../includes/header.php';
                                                 <td>₱<?= number_format($fee['amount'], 2) ?></td>
                                                 <td><?= date('M d, Y', strtotime($fee['due_date'])) ?></td>
                                                 <td>
-                                                    <span class="badge bg-<?= 
-                                                        $fee['status'] == 'Paid' ? 'success' : 
-                                                        ($fee['status'] == 'Overdue' ? 'danger' : 'warning') 
-                                                    ?>">
+                                                    <span class="badge bg-<?=
+                                                                            $fee['status'] == 'Paid' ? 'success' : ($fee['status'] == 'Overdue' ? 'danger' : 'warning')
+                                                                            ?>">
                                                         <?= htmlspecialchars($fee['status']) ?>
                                                     </span>
                                                 </td>
@@ -188,10 +186,13 @@ require_once '../../includes/header.php';
                 </div>
             </div>
         </div>
-        
+
         <div class="text-end">
             <a href="index.php" class="btn btn-secondary">Back to List</a>
-            <a href="edit.php?id=<?= $studentId ?>" class="btn btn-primary">Edit</a>
+
+            <?php if ($student['isDeleted'] == 0): ?>
+                <a href="edit.php?id=<?= $studentId ?>" class="btn btn-primary">Edit</a>
+            <?php endif; ?>
         </div>
     </div>
 </div>

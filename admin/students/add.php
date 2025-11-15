@@ -9,6 +9,33 @@ $stmtUser = $pdo->prepare("SELECT CONCAT(first_name, ' ', last_name) AS full_nam
 $stmtUser->execute([$userId]);
 $createdBy = $stmtUser->fetchColumn();
 
+function normalizeMobile($num)
+{
+    $num = preg_replace('/\D/', '', $num);
+
+    if (strlen($num) === 9 && $num[0] === '9') {
+        return '+63' . $num;
+    }
+
+    if (strlen($num) === 10 && $num[0] === '0' && $num[1] === '9') {
+        return '+63' . substr($num, 1);
+    }
+
+    if (strlen($num) === 11 && $num[0] === '0' && $num[1] === '9') {
+        return '+63' . substr($num, 1);
+    }
+
+    if (strlen($num) === 11 && substr($num, 0, 2) === '63') {
+        return '+' . $num;
+    }
+
+    if (strlen($num) === 12 && substr($num, 0, 2) === '63') {
+        return '+' . $num;
+    }
+
+    return null;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $studentData = [
         'idPicturePath' => null,
@@ -39,24 +66,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'address' => $_POST['parent_address']
     ];
 
-    $uploadDir = 'uploads/studentProfiles/';
+    $uploadDir = '../../uploads/studentProfiles/';
     if (!file_exists($uploadDir)) {
         mkdir($uploadDir, 0777, true);
     }
 
     $studentData['idPicturePath'] = null;
 
-    if (!empty($_FILES['idPicturePath']['name'])) {
-        $fileName = 'STU_' . $_POST['student_id'] . 'PFP';
+    // Handle base64 cropped image
+    if (!empty($_POST['croppedImage'])) {
+        $imageData = $_POST['croppedImage'];
+        $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
+        $imageData = str_replace(' ', '+', $imageData);
+        $decodedImage = base64_decode($imageData);
+
+        $fileName = 'STU_' . $_POST['student_id'] . 'PFP.jpg';
         $targetPath = $uploadDir . $fileName;
 
-        if (move_uploaded_file($_FILES['idPicturePath']['tmp_name'], $targetPath)) {
+        if (file_put_contents($targetPath, $decodedImage)) {
             $studentData['idPicturePath'] = $fileName;
         } else {
-            $error = "Failed to upload ID picture.";
+            $error = "Failed to save ID picture.";
         }
     }
-
 
     $check = $pdo->prepare("SELECT id FROM students WHERE student_id = ?");
     $check->execute([$studentData['student_id']]);
@@ -67,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="container mt-5">
                     <div class="alert alert-danger text-center shadow-sm" role="alert" style="max-width:600px;margin:auto;">
                         <h4 class="alert-heading">Student Already Exists</h4>
-                        <p class="mb-0">This pupil has been recorded before.</strong></p>
+                        <p class="mb-0">This pupil has been recorded before.</p>
                     </div>
                 </div>
             ';
@@ -113,6 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <style>
         .preview-container {
             width: 200px;
@@ -125,6 +158,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             overflow: hidden;
             margin: 15px auto;
             background-color: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preview-container:hover {
+            border-color: #0d6efd;
+            background-color: #e9ecef;
         }
 
         .preview-container img {
@@ -138,16 +178,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #6c757d;
         }
 
-        #uploadArea {
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        #uploadArea:hover {
-            border-color: #0d6efd;
-            background-color: #e9ecef;
-        }
-
         .form-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -159,9 +189,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-bottom: 20px;
             color: #0d6efd;
         }
+
+        /* Crop Modal Styles */
+        .crop-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .crop-modal-content {
+            background-color: #fff;
+            margin: 2% auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 8px;
+        }
+
+        .crop-container {
+            max-height: 500px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .crop-container img {
+            max-width: 100%;
+        }
+
+        .crop-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #cameraContainer {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        #cameraPreview {
+            max-width: 100%;
+            margin: 10px auto;
+            display: block;
+        }
+
+        .camera-controls {
+            margin-top: 10px;
+        }
+
+        .camera-controls button {
+            margin: 0 5px;
+        }
     </style>
 </head>
-
 
 <body>
     <div class="container py-4">
@@ -174,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <h5 class="mb-0">Student Information Form</h5>
                     </div>
                     <div class="card-body">
-                        <form method="POST" enctype="multipart/form-data">
+                        <form method="POST" enctype="multipart/form-data" id="studentForm">
                             <div class="row">
                                 <div class="col-md-6">
                                     <h5 class="section-title">Student Information</h5>
@@ -182,12 +268,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="text-center mb-4">
                                         <div class="preview-container" id="uploadArea">
                                             <div class="upload-icon">📷</div>
-                                            <img id="imagePreview" alt="ID Picture Preview">
+                                            <img id="previewImg" alt="ID Picture Preview">
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="id_picture" class="form-label">Student ID Picture</label>
 
-                                            <!-- Button group for choosing input method -->
+                                        <div class="mb-3">
+                                            <label class="form-label">Student ID Picture</label>
+
                                             <div class="btn-group w-100 mb-2" role="group">
                                                 <button type="button" class="btn btn-outline-primary" id="useCameraBtn">
                                                     <i class="bi bi-camera"></i> Use Camera
@@ -197,16 +283,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </button>
                                             </div>
 
-                                            <!-- Camera preview container (hidden by default) -->
-                                            <div id="cameraContainer" style="display: none;">
-                                                <div style="position: relative; display: inline-block;">
-                                                    <video id="cameraPreview" autoplay playsinline style="width: 100%; max-width: 400px; background: #000; border: 2px solid #dee2e6; border-radius: 4px;"></video>
-                                                    <div id="cameraStatus" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">
-                                                        Initializing camera...
-                                                    </div>
-                                                </div>
-                                                <div class="mt-2">
-                                                    <button type="button" class="btn btn-success" id="captureBtn" disabled>
+                                            <div id="cameraContainer" style="display:none;">
+                                                <video id="cameraPreview" autoplay playsinline></video>
+                                                <div class="camera-controls">
+                                                    <button type="button" class="btn btn-success" id="captureBtn">
                                                         <i class="bi bi-camera-fill"></i> Capture Photo
                                                     </button>
                                                     <button type="button" class="btn btn-secondary" id="stopCameraBtn">
@@ -215,44 +295,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 </div>
                                             </div>
 
-                                            <!-- File input -->
-                                            <input type="file" class="form-control" id="id_picture" name="idPicturePath" accept="image/*" required hidden>
-
-                                            <!-- Hidden canvas for capturing photo -->
-                                            <canvas id="captureCanvas" style="display: none;"></canvas>
-
-                                            <!-- Crop editor (hidden by default) -->
-                                            <div id="cropContainer" style="display: none;">
-                                                <div style="position: relative; max-width: 500px; margin: 0 auto;">
-                                                    <canvas id="cropCanvas" style="max-width: 100%; border: 2px solid #dee2e6; border-radius: 4px; cursor: crosshair;"></canvas>
-                                                    <div id="cropOverlay" style="position: absolute; border: 2px dashed #fff; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); pointer-events: none;"></div>
-                                                </div>
-                                                <div class="mt-2">
-                                                    <button type="button" class="btn btn-primary" id="applyCropBtn">
-                                                        <i class="bi bi-check-circle"></i> Apply Crop
-                                                    </button>
-                                                    <button type="button" class="btn btn-secondary" id="cancelCropBtn">
-                                                        <i class="bi bi-x-circle"></i> Cancel
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-secondary" id="resetCropBtn">
-                                                        <i class="bi bi-arrow-clockwise"></i> Reset
-                                                    </button>
-                                                </div>
-                                                <div class="form-text mt-2">Click and drag to select the area to crop</div>
-                                            </div>
-
-                                            <!-- Preview of final image -->
-                                            <div id="imagePreview" class="mt-2" style="display: none;">
-                                                <img id="previewImg" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border: 2px solid #dee2e6; border-radius: 4px;">
-                                                <div class="mt-2">
-                                                    <button type="button" class="btn btn-warning btn-sm" id="editImageBtn">
-                                                        <i class="bi bi-crop"></i> Edit/Crop Again
-                                                    </button>
-                                                    <button type="button" class="btn btn-danger btn-sm" id="removeImageBtn">
-                                                        <i class="bi bi-trash"></i> Remove
-                                                    </button>
-                                                </div>
-                                            </div>
+                                            <input type="file" id="fileInput" accept="image/*" style="display:none;">
+                                            <input type="hidden" name="croppedImage" id="croppedImageData">
 
                                             <div class="form-text">Take a photo or upload a passport-size photo (JPG, PNG, max 2MB)</div>
                                         </div>
@@ -260,7 +304,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                     <div class="mb-3">
                                         <label for="student_id" class="form-label">Student ID</label>
-                                        <input type="text" class="form-control" id="student_id" name="student_id" required>
+                                        <input type="text" class="form-control" id="student_id" name="student_id" minlength="12" maxlength="12" required>
                                     </div>
                                     <div class="mb-3">
                                         <label for="first_name" class="form-label">First Name</label>
@@ -288,12 +332,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                 </div>
 
-                                <script>
-                                    const currentYear = new Date().getFullYear();
-                                    const nextYear = currentYear + 1;
-                                    document.getElementById("schoolYear").value = `${currentYear} - ${nextYear}`;
-                                </script>
-
                                 <div class="col-md-6">
                                     <h5 class="section-title">Additional Information</h5>
 
@@ -303,12 +341,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                     <div class="mb-3">
                                         <label for="mobile_number" class="form-label">Mobile Number</label>
-                                        <input type="tel" class="form-control" maxlength="11" pattern="[0-9]{11}" id="mobile_number" name="mobile_number">
+                                        <div class="input-group">
+                                            <span class="input-group-text">+63</span>
+                                            <input type="tel" class="form-control" id="mobile_number" name="mobile_number" placeholder="9XXXXXXXXX" maxlength="10" pattern="9[0-9]{9}" required>
+                                        </div>
                                     </div>
                                     <div class="mb-3">
                                         <label for="grade_level" class="form-label">Grade Level</label>
                                         <select class="form-select" id="grade_level" name="grade_level" required>
-                                            <option value="" disabled selected> Select Grade Level </option>
+                                            <option value="" disabled selected>Select Grade Level</option>
                                             <option value="Kindergarten">Kindergarten</option>
                                             <option value="Grade 1">Grade 1</option>
                                             <option value="Grade 2">Grade 2</option>
@@ -320,7 +361,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                     <div class="mb-3">
                                         <label for="section" class="form-label">Section</label>
-                                        <input type="text" class="form-control" id="section" name="section" required>
+                                        <select class="form-select" id="section" name="section" required disabled>
+                                            <option value="" disabled selected>Select Grade Level First</option>
+                                        </select>
                                     </div>
 
                                     <h5 class="section-title mt-4">Emergency Contact Information</h5>
@@ -339,7 +382,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                     <div class="mb-3">
                                         <label for="parent_mobile_number" class="form-label">Mobile Number</label>
-                                        <input type="tel" class="form-control" maxlength="11" pattern="[0-9]{11}" id="parent_mobile_number" name="parent_mobile_number" required>
+                                        <div class="input-group">
+                                            <span class="input-group-text">+63</span>
+                                            <input type="tel" class="form-control" id="parent_mobile_number" name="parent_mobile_number" placeholder="9XXXXXXXXX" maxlength="10" pattern="9[0-9]{9}" required>
+                                        </div>
                                     </div>
                                     <div class="mb-3">
                                         <label for="parent_email" class="form-label">Email Address</label>
@@ -354,7 +400,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             <div class="mt-4 text-center">
                                 <button type="submit" class="btn btn-primary btn-lg">Save Student</button>
-                                <a href="#" class="btn btn-secondary btn-lg ms-2">Cancel</a>
+                                <a href="index.php" class="btn btn-secondary btn-lg ms-2">Cancel</a>
                             </div>
                         </form>
                     </div>
@@ -363,436 +409,320 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+    <!-- Crop Modal -->
+    <div id="cropModal" class="crop-modal">
+        <div class="crop-modal-content">
+            <h4 class="text-center mb-3">Crop Your Photo</h4>
+            <div class="crop-container">
+                <img id="cropImage" src="">
+            </div>
+            <div class="crop-buttons">
+                <button type="button" class="btn btn-success" id="cropConfirm">
+                    <i class="bi bi-check-circle"></i> Crop & Use
+                </button>
+                <button type="button" class="btn btn-secondary" id="cropCancel">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const fileInput = document.getElementById('id_picture');
-            const imagePreview = document.getElementById('imagePreview');
-            const uploadArea = document.getElementById('uploadArea');
-            const uploadIcon = uploadArea.querySelector('.upload-icon');
-            (function() {
-                const today = new Date();
-                const y = today.getFullYear();
-                const m = String(today.getMonth() + 1).padStart(2, '0');
-                const d = String(today.getDate()).padStart(2, '0');
-                const maxDate = `${y}-${m}-${d}`;
-                const el = document.getElementById('date_of_birth');
-                if (el) el.max = maxDate;
+        // Set school year
+        const currentYear = new Date().getFullYear();
+        const nextYear = currentYear + 1;
+        document.getElementById("schoolYear").value = `${currentYear} - ${nextYear}`;
 
-                document.addEventListener('submit', function(e) {
-                    const input = document.getElementById('date_of_birth');
-                    if (!input) return;
-                    if (input.value && input.value > maxDate) {
-                        e.preventDefault();
-                        input.setCustomValidity('Please choose today or a past date.');
-                        input.reportValidity();
-                    } else {
-                        input.setCustomValidity('');
-                    }
-                }, true);
-            })();
+        // Set max date for date of birth
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, '0');
+        const d = String(today.getDate()).padStart(2, '0');
+        const maxDate = `${y}-${m}-${d}`;
+        document.getElementById('date_of_birth').max = maxDate;
 
-            uploadArea.addEventListener('click', function() {
-                fileInput.click();
-            });
+        // Image handling with cropping
+        let cropper = null;
+        let stream = null;
 
-            fileInput.addEventListener('change', function() {
-                const file = this.files[0];
+        const fileInput = document.getElementById('fileInput');
+        const previewImg = document.getElementById('previewImg');
+        const uploadArea = document.getElementById('uploadArea');
+        const cropModal = document.getElementById('cropModal');
+        const cropImage = document.getElementById('cropImage');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const video = document.getElementById('cameraPreview');
 
-                if (file) {
-                    const reader = new FileReader();
-
-                    reader.addEventListener('load', function() {
-                        imagePreview.src = reader.result;
-                        imagePreview.style.display = 'block';
-                        uploadIcon.style.display = 'none';
-                    });
-
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            uploadArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#0d6efd';
-                uploadArea.style.backgroundColor = '#e9ecef';
-            });
-
-            uploadArea.addEventListener('dragleave', function() {
-                uploadArea.style.borderColor = '#ccc';
-                uploadArea.style.backgroundColor = '#f8f9fa';
-            });
-
-            uploadArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#ccc';
-                uploadArea.style.backgroundColor = '#f8f9fa';
-
-                if (e.dataTransfer.files.length) {
-                    fileInput.files = e.dataTransfer.files;
-                    const event = new Event('change');
-                    fileInput.dispatchEvent(event);
-                }
-            });
+        // Upload file button
+        document.getElementById('useFileBtn').addEventListener('click', () => {
+            fileInput.click();
         });
-    </script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let stream = null;
-            let originalImage = null;
-            let originalBlob = null;
-            let croppedBlob = null;
-            let cropData = {
-                startX: 0,
-                startY: 0,
-                endX: 0,
-                endY: 0,
-                isDragging: false
-            };
+        // Click upload area to select file
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
 
-            const video = document.getElementById('cameraPreview');
-            const captureCanvas = document.getElementById('captureCanvas');
-            const cropCanvas = document.getElementById('cropCanvas');
-            const cropOverlay = document.getElementById('cropOverlay');
-            const fileInput = document.getElementById('id_picture');
-            const previewImg = document.getElementById('previewImg');
-            const captureBtn = document.getElementById('captureBtn');
-            const cameraStatus = document.getElementById('cameraStatus');
+        // File selected
+        fileInput.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-            // Show camera interface
-            document.getElementById('useCameraBtn').addEventListener('click', async function() {
-                document.getElementById('cameraContainer').style.display = 'block';
-                document.getElementById('cropContainer').style.display = 'none';
-                document.getElementById('imagePreview').style.display = 'none';
-                cameraStatus.textContent = 'Requesting camera access...';
-                cameraStatus.style.background = 'rgba(255, 165, 0, 0.8)';
-
-                try {
-                    const constraints = {
-                        video: {
-                            width: {
-                                ideal: 640
-                            },
-                            height: {
-                                ideal: 480
-                            },
-                            facingMode: 'user'
-                        },
-                        audio: false
-                    };
-
-                    stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    video.srcObject = stream;
-
-                    video.onloadedmetadata = function() {
-                        video.play().then(() => {
-                            cameraStatus.textContent = 'Camera ready!';
-                            cameraStatus.style.background = 'rgba(0, 128, 0, 0.8)';
-                            captureBtn.disabled = false;
-
-                            setTimeout(() => {
-                                cameraStatus.style.display = 'none';
-                            }, 2000);
-                        }).catch(err => {
-                            console.error('Error playing video:', err);
-                            showCameraError('Failed to start video playback');
-                        });
-                    };
-
-                } catch (err) {
-                    console.error('Camera error:', err);
-                    let errorMsg = 'Unable to access camera. ';
-
-                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                        errorMsg += 'Please allow camera permission and try again.';
-                    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-                        errorMsg += 'No camera found on this device.';
-                    } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-                        errorMsg += 'Camera is already in use by another application.';
-                    } else {
-                        errorMsg += err.message;
-                    }
-
-                    showCameraError(errorMsg);
-                }
-            });
-
-            function showCameraError(message) {
-                cameraStatus.textContent = message;
-                cameraStatus.style.background = 'rgba(220, 53, 69, 0.8)';
-                cameraStatus.style.display = 'block';
-                captureBtn.disabled = true;
-
-                setTimeout(() => {
-                    if (confirm(message + '\n\nWould you like to upload a file instead?')) {
-                        document.getElementById('useFileBtn').click();
-                    }
-                }, 500);
-            }
-
-            // Show file upload interface
-            document.getElementById('useFileBtn').addEventListener('click', function() {
-                fileInput.click();
-                stopCamera();
-                document.getElementById('cameraContainer').style.display = 'none';
-            });
-
-            // Capture photo from camera
-            captureBtn.addEventListener('click', function() {
-                if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                    const context = captureCanvas.getContext('2d');
-                    captureCanvas.width = video.videoWidth;
-                    captureCanvas.height = video.videoHeight;
-                    context.drawImage(video, 0, 0);
-
-                    captureCanvas.toBlob(function(blob) {
-                        if (blob) {
-                            originalBlob = blob;
-                            loadImageForCropping(blob);
-                            stopCamera();
-                            document.getElementById('cameraContainer').style.display = 'none';
-                        } else {
-                            alert('Failed to capture image. Please try again.');
-                        }
-                    }, 'image/jpeg', 0.9);
-                } else {
-                    alert('Camera not ready. Please wait a moment and try again.');
-                }
-            });
-
-            // Handle file upload
-            fileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    if (file.size > 2 * 1024 * 1024) {
-                        alert('File size must be less than 2MB');
-                        fileInput.value = '';
-                        return;
-                    }
-
-                    originalBlob = file;
-                    loadImageForCropping(file);
-                }
-            });
-
-            // Load image into crop editor
-            function loadImageForCropping(imageBlob) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        originalImage = img;
-                        showCropEditor(img);
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(imageBlob);
-            }
-
-            // Show crop editor
-            function showCropEditor(img) {
-                document.getElementById('cropContainer').style.display = 'block';
-                document.getElementById('imagePreview').style.display = 'none';
-
-                // Set canvas size
-                const maxWidth = 500;
-                const scale = Math.min(1, maxWidth / img.width);
-                cropCanvas.width = img.width * scale;
-                cropCanvas.height = img.height * scale;
-
-                // Draw image
-                const ctx = cropCanvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, cropCanvas.width, cropCanvas.height);
-
-                // Initialize crop area (full image)
-                cropData = {
-                    startX: 0,
-                    startY: 0,
-                    endX: cropCanvas.width,
-                    endY: cropCanvas.height,
-                    isDragging: false,
-                    scale: scale
-                };
-
-                updateCropOverlay();
-            }
-
-            // Crop canvas mouse events
-            cropCanvas.addEventListener('mousedown', function(e) {
-                const rect = cropCanvas.getBoundingClientRect();
-                cropData.startX = e.clientX - rect.left;
-                cropData.startY = e.clientY - rect.top;
-                cropData.isDragging = true;
-            });
-
-            cropCanvas.addEventListener('mousemove', function(e) {
-                if (cropData.isDragging) {
-                    const rect = cropCanvas.getBoundingClientRect();
-                    cropData.endX = e.clientX - rect.left;
-                    cropData.endY = e.clientY - rect.top;
-                    updateCropOverlay();
-                }
-            });
-
-            cropCanvas.addEventListener('mouseup', function() {
-                cropData.isDragging = false;
-            });
-
-            cropCanvas.addEventListener('mouseleave', function() {
-                cropData.isDragging = false;
-            });
-
-            // Touch events for mobile
-            cropCanvas.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                const rect = cropCanvas.getBoundingClientRect();
-                const touch = e.touches[0];
-                cropData.startX = touch.clientX - rect.left;
-                cropData.startY = touch.clientY - rect.top;
-                cropData.isDragging = true;
-            });
-
-            cropCanvas.addEventListener('touchmove', function(e) {
-                e.preventDefault();
-                if (cropData.isDragging) {
-                    const rect = cropCanvas.getBoundingClientRect();
-                    const touch = e.touches[0];
-                    cropData.endX = touch.clientX - rect.left;
-                    cropData.endY = touch.clientY - rect.top;
-                    updateCropOverlay();
-                }
-            });
-
-            cropCanvas.addEventListener('touchend', function() {
-                cropData.isDragging = false;
-            });
-
-            // Update crop overlay
-            function updateCropOverlay() {
-                const x = Math.min(cropData.startX, cropData.endX);
-                const y = Math.min(cropData.startY, cropData.endY);
-                const width = Math.abs(cropData.endX - cropData.startX);
-                const height = Math.abs(cropData.endY - cropData.startY);
-
-                cropOverlay.style.left = x + 'px';
-                cropOverlay.style.top = y + 'px';
-                cropOverlay.style.width = width + 'px';
-                cropOverlay.style.height = height + 'px';
-            }
-
-            // Apply crop
-            document.getElementById('applyCropBtn').addEventListener('click', function() {
-                if (!originalImage) return;
-
-                const x = Math.min(cropData.startX, cropData.endX) / cropData.scale;
-                const y = Math.min(cropData.startY, cropData.endY) / cropData.scale;
-                const width = Math.abs(cropData.endX - cropData.startX) / cropData.scale;
-                const height = Math.abs(cropData.endY - cropData.startY) / cropData.scale;
-
-                if (width < 10 || height < 10) {
-                    alert('Crop area is too small. Please select a larger area.');
-                    return;
-                }
-
-                // Create cropped image
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = width;
-                tempCanvas.height = height;
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCtx.drawImage(originalImage, x, y, width, height, 0, 0, width, height);
-
-                // Convert to blob and save
-                tempCanvas.toBlob(function(blob) {
-                    croppedBlob = blob;
-
-                    // Create file and update input
-                    const file = new File([blob], 'cropped_image.jpg', {
-                        type: 'image/jpeg'
-                    });
-                    const dataTransfer = new DataTransfer();
-                    dataTransfer.items.add(file);
-                    fileInput.files = dataTransfer.files;
-
-                    // Show preview
-                    const previewUrl = URL.createObjectURL(blob);
-                    previewImg.src = previewUrl;
-                    document.getElementById('imagePreview').style.display = 'block';
-                    document.getElementById('cropContainer').style.display = 'none';
-
-                    // Update original image with cropped version for re-editing
-                    const croppedImg = new Image();
-                    croppedImg.onload = function() {
-                        originalImage = croppedImg;
-                        originalBlob = blob;
-                    };
-                    croppedImg.src = previewUrl;
-                }, 'image/jpeg', 0.9);
-            });
-
-            // Cancel crop
-            document.getElementById('cancelCropBtn').addEventListener('click', function() {
-                document.getElementById('cropContainer').style.display = 'none';
-
-                // If we had a previous cropped image, restore it
-                if (croppedBlob) {
-                    const previewUrl = URL.createObjectURL(croppedBlob);
-                    previewImg.src = previewUrl;
-                    document.getElementById('imagePreview').style.display = 'block';
-                } else {
-                    // No previous image, clear everything
-                    fileInput.value = '';
-                    originalImage = null;
-                    originalBlob = null;
-                }
-            });
-
-            // Reset crop
-            document.getElementById('resetCropBtn').addEventListener('click', function() {
-                if (originalImage) {
-                    cropData.startX = 0;
-                    cropData.startY = 0;
-                    cropData.endX = cropCanvas.width;
-                    cropData.endY = cropCanvas.height;
-                    updateCropOverlay();
-                }
-            });
-
-            // Edit image again
-            document.getElementById('editImageBtn').addEventListener('click', function() {
-                if (originalImage) {
-                    showCropEditor(originalImage);
-                }
-            });
-
-            // Remove image
-            document.getElementById('removeImageBtn').addEventListener('click', function() {
+            if (file.size > 2 * 1024 * 1024) {
+                alert('File size must be less than 2MB');
                 fileInput.value = '';
-                previewImg.src = '';
-                originalImage = null;
-                originalBlob = null;
-                croppedBlob = null;
-                document.getElementById('imagePreview').style.display = 'none';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                cropImage.src = event.target.result;
+                cropModal.style.display = 'block';
+                initCropper();
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Camera
+        document.getElementById('useCameraBtn').addEventListener('click', async () => {
+            cameraContainer.style.display = 'block';
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'user'
+                    },
+                    audio: false
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                alert('Cannot access camera: ' + err.message);
+                cameraContainer.style.display = 'none';
+            }
+        });
+
+        document.getElementById('captureBtn').addEventListener('click', () => {
+            if (!stream) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            cropImage.src = canvas.toDataURL('image/jpeg');
+            cropModal.style.display = 'block';
+            initCropper();
+            stopCamera();
+        });
+
+        document.getElementById('stopCameraBtn').addEventListener('click', stopCamera);
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            cameraContainer.style.display = 'none';
+        }
+
+        // Initialize cropper
+        function initCropper() {
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            cropper = new Cropper(cropImage, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.8,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+            });
+        }
+
+        // Confirm crop
+        document.getElementById('cropConfirm').addEventListener('click', () => {
+            if (!cropper) return;
+
+            const canvas = cropper.getCroppedCanvas({
+                width: 400,
+                height: 400,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
             });
 
-            // Stop camera
-            document.getElementById('stopCameraBtn').addEventListener('click', function() {
-                stopCamera();
-                document.getElementById('cameraContainer').style.display = 'none';
-            });
+            const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
 
-            function stopCamera() {
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                    video.srcObject = null;
-                    stream = null;
-                }
-                cameraStatus.style.display = 'block';
-                cameraStatus.textContent = 'Initializing camera...';
-                captureBtn.disabled = true;
+            previewImg.src = croppedDataUrl;
+            previewImg.style.display = 'block';
+            uploadArea.querySelector('.upload-icon').style.display = 'none';
+
+            document.getElementById('croppedImageData').value = croppedDataUrl;
+
+            cropModal.style.display = 'none';
+            cropper.destroy();
+            cropper = null;
+        });
+
+        // Cancel crop
+        document.getElementById('cropCancel').addEventListener('click', () => {
+            cropModal.style.display = 'none';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            fileInput.value = '';
+        });
+
+        // Form validation and mobile number formatting
+        document.getElementById('studentForm').addEventListener('submit', function(e) {
+            const dobInput = document.getElementById('date_of_birth');
+            if (dobInput.value && dobInput.value > maxDate) {
+                e.preventDefault();
+                alert('Please choose today or a past date for date of birth.');
+                return false;
+            }
+
+            if (!document.getElementById('croppedImageData').value) {
+                e.preventDefault();
+                alert('Please upload and crop a student photo.');
+                return false;
+            }
+
+            const studentMobile = document.getElementById('mobile_number');
+            const parentMobile = document.getElementById('parent_mobile_number');
+
+            if (studentMobile.value && !studentMobile.value.startsWith('+63')) {
+                studentMobile.value = '+63' + studentMobile.value;
+            }
+
+            if (parentMobile.value && !parentMobile.value.startsWith('+63')) {
+                parentMobile.value = '+63' + parentMobile.value;
             }
         });
     </script>
 
+    <script>
+        const sectionsByGrade = {
+            'Kindergarten': [{
+                    value: 'Apple',
+                    label: 'Apple'
+                },
+                {
+                    value: 'Apricot',
+                    label: 'Apricot'
+                },
+                {
+                    value: 'Avocado',
+                    label: 'Avocado'
+                }
+            ],
+            'Grade 1': [{
+                    value: 'Birch',
+                    label: 'Birch'
+                },
+                {
+                    value: 'Banyan',
+                    label: 'Banyan'
+                },
+                {
+                    value: 'Bamboo',
+                    label: 'Bamboo'
+                }
+            ],
+            'Grade 2': [{
+                    value: 'Cranberry',
+                    label: 'Cranberry'
+                },
+                {
+                    value: 'Cherry',
+                    label: 'Cherry'
+                },
+                {
+                    value: 'Currant',
+                    label: 'Currant'
+                }
+            ],
+            'Grade 3': [{
+                    value: 'Dolphin',
+                    label: 'Dolphin'
+                },
+                {
+                    value: 'Damselfish',
+                    label: 'Damselfish'
+                },
+                {
+                    value: 'Dory',
+                    label: 'Dory'
+                }
+            ],
+            'Grade 4': [{
+                    value: 'Elephant',
+                    label: 'Elephant'
+                },
+                {
+                    value: 'Elk',
+                    label: 'Elk'
+                },
+                {
+                    value: 'Echidna',
+                    label: 'Echidna'
+                }
+            ],
+            'Grade 5': [{
+                    value: 'Falcon',
+                    label: 'Falcon'
+                },
+                {
+                    value: 'Ferret',
+                    label: 'Ferret'
+                },
+                {
+                    value: 'Fox',
+                    label: 'Fox'
+                }
+            ],
+            'Grade 6': [{
+                    value: 'Gardenia',
+                    label: 'Gardenia'
+                },
+                {
+                    value: 'Geranium',
+                    label: 'Geranium'
+                },
+                {
+                    value: 'Gerbera',
+                    label: 'Gerbera'
+                }
+            ]
+        };
+
+        const gradeLevelSelect = document.getElementById('grade_level');
+        const sectionSelect = document.getElementById('section');
+
+        gradeLevelSelect.addEventListener('change', function() {
+            const selectedGrade = this.value;
+
+            sectionSelect.innerHTML = '<option value="" disabled selected>Select Section</option>';
+
+            sectionSelect.disabled = false;
+
+            if (sectionsByGrade[selectedGrade]) {
+                sectionsByGrade[selectedGrade].forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section.value;
+                    option.textContent = section.label;
+                    sectionSelect.appendChild(option);
+                });
+            }
+        });
+    </script>
 </body>
 
 <?php require_once '../../includes/footer.php'; ?>

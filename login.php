@@ -1,31 +1,60 @@
 <?php
 require_once 'includes/config.php';
-require_once 'includes/auth.php';
+require_once 'includes/db.php';
+require_once 'altcha-verify.php';
 
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 
-protectLoginPage();
+// Check if already logged in
+if (isset($_SESSION['user_id'])) {
+    if ($_SESSION['role'] === 'admin') {
+        header("Location: admin/dashboard.php");
+        exit();
+    } elseif ($_SESSION['role'] === 'staff') {
+        header("Location: staff/dashboard.php");
+        exit();
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
+    $altcha_payload = $_POST['altcha'] ?? '';
 
-    if (login($username, $password)) {
-        $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE username = :username");
-        $stmt->execute(['username' => $username]);
-
-        if ($_SESSION['role'] === 'admin') {
-            header("Location: admin/dashboard.php");
-            exit();
-        } elseif ($_SESSION['role'] === 'staff') {
-            header("Location: staff/dashboard.php");
-            exit();
-        } else {
-            $error = "Role not recognized.";
-        }
+    if (!verifyAltcha($altcha_payload)) {
+        $error = "Invalid security verification. Please try again.";
     } else {
-        $error = "Invalid username or password";
+        $stmt = $pdo->prepare("
+            SELECT u.*, ut.user_type 
+            FROM users u
+            LEFT JOIN user_tables ut ON ut.userID = u.id
+            WHERE u.username = ?
+        ");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch();
+
+        if ($user && password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['user_type'] = $user['user_type'] ?? null;
+
+            $stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+            $stmt->execute([$user['id']]);
+
+            if ($user['role'] === 'admin') {
+                header("Location: admin/dashboard.php");
+                exit();
+            } elseif ($user['role'] === 'staff') {
+                header("Location: staff/dashboard.php");
+                exit();
+            } else {
+                $error = "Role not recognized.";
+            }
+        } else {
+            $error = "Invalid username or password";
+        }
     }
 }
 ?>
@@ -132,6 +161,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transform: translateY(-2px);
         }
 
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .forgot-password {
             color: var(--accent-color);
             text-decoration: none;
@@ -142,14 +176,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .forgot-password:hover {
             color: var(--secondary-color);
             text-decoration: underline;
-        }
-
-        .floating-alert {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            animation: fadeInDown 0.5s, fadeOutUp 0.5s 2.5s forwards;
         }
     </style>
 </head>
@@ -173,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         <?php endif; ?>
 
-                        <form method="POST" class="animate__animated animate__fadeIn animate__delay-1s">
+                        <form method="POST" id="loginForm" class="animate__animated animate__fadeIn animate__delay-1s">
                             <div class="mb-4">
                                 <label for="username" class="form-label fw-bold">Username</label>
                                 <div class="input-group">
@@ -191,13 +217,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
-                                <!-- <div class="text-end mt-2">
-                                    <a href="#" class="forgot-password">Forgot Password?</a>
-                                </div> -->
                             </div>
-                            <br>
+
+                            <!-- Altcha Widget -->
+                            <!-- <div class="mb-4">
+                                <altcha-widget 
+                                    challengeurl="challenge.php"
+                                    hidefooter
+                                    name="altcha"
+                                ></altcha-widget>
+                            </div> -->
+
                             <div class="d-grid gap-2 mt-4">
-                                <button type="submit" class="btn btn-login btn-lg text-white">
+                                <button type="submit" class="btn btn-login btn-lg text-white" id="submitBtn">
                                     <i class="fas fa-sign-in-alt me-2"></i> LOGIN
                                 </button>
                             </div>
@@ -211,8 +243,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+    <!-- Altcha Script -->
+    <script async defer src="https://cdn.jsdelivr.net/gh/altcha-org/altcha@main/dist/altcha.min.js" type="module"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Disable submit until Altcha is verified
+        const submitBtn = document.getElementById('submitBtn');
+        const altchaWidget = document.querySelector('altcha-widget');
+        
+        if (altchaWidget) {
+            submitBtn.disabled = true;
+            
+            altchaWidget.addEventListener('statechange', (event) => {
+                if (event.detail.state === 'verified') {
+                    submitBtn.disabled = false;
+                } else {
+                    submitBtn.disabled = true;
+                }
+            });
+        }
+
         // Toggle password visibility
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');

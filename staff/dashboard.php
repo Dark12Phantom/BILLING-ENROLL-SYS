@@ -18,7 +18,7 @@ require_once 'includes/staff-header.php';
             <div class="card-body">
                 <h5 class="card-title">Total Students</h5>
                 <?php
-                $stmt = $pdo->query("SELECT COUNT(*) FROM students");
+                $stmt = $pdo->query("SELECT COUNT(*) FROM students WHERE isdeleted = '0'");
                 $count = $stmt->fetchColumn();
                 ?>
                 <h2 class="card-text"><?php echo $count; ?></h2>
@@ -27,6 +27,7 @@ require_once 'includes/staff-header.php';
         </div>
     </div>
     
+    <?php if ($userType === 'cashier'): ?>
     <div class="col-md-4 mb-4">
         <div class="card text-white bg-success h-100">
             <div class="card-body">
@@ -54,6 +55,7 @@ require_once 'includes/staff-header.php';
             </div>
         </div>
     </div>
+    <?php endif; ?>
 </div>
 
 <?php require_once 'includes/staff-footer.php'; ?>

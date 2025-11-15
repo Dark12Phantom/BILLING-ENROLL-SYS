@@ -85,41 +85,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    $uploadDir = 'uploads/studentProfiles/';
+    $uploadDir = '../../uploads/studentProfiles/';
     if (!file_exists($uploadDir)) {
         mkdir($uploadDir, 0777, true);
     }
 
     $newImagePath = null;
-    if (!empty($_FILES['id_picture']['name'])) {
-        $file = $_FILES['id_picture'];
-
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        $fileType = mime_content_type($file['tmp_name']);
-
-        if (!in_array($fileType, $allowedTypes)) {
-            $errors[] = "Only JPG, PNG, and GIF files are allowed.";
-        }
-
-        if ($file['size'] > 2 * 1024 * 1024) {
-            $errors[] = "File size must be less than 2MB.";
-        }
-
-        if (empty($errors)) {
-            $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
-            $newImagePath = 'STU_' . $studentData['student_id'] . '_PFP.' . $fileExtension;
-            $targetPath = $uploadDir . $newImagePath;
-
-            if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-                if (!empty($student['idPicturePath']) && $student['idPicturePath'] !== $newImagePath) {
-                    $oldImagePath = $uploadDir . $student['idPicturePath'];
-                    if (file_exists($oldImagePath)) {
-                        unlink($oldImagePath);
-                    }
+    
+    if (!empty($_POST['croppedImage'])) {
+        $imageData = $_POST['croppedImage'];
+        $imageData = str_replace('data:image/jpeg;base64,', '', $imageData);
+        $imageData = str_replace(' ', '+', $imageData);
+        $decodedImage = base64_decode($imageData);
+        
+        $newImagePath = 'STU_' . $studentData['student_id'] . '_PFP.jpg';
+        $targetPath = $uploadDir . $newImagePath;
+        
+        if (file_put_contents($targetPath, $decodedImage)) {
+            if (!empty($student['idPicturePath']) && $student['idPicturePath'] !== $newImagePath) {
+                $oldImagePath = $uploadDir . $student['idPicturePath'];
+                if (file_exists($oldImagePath)) {
+                    unlink($oldImagePath);
                 }
-            } else {
-                $errors[] = "Failed to upload ID picture.";
             }
+        } else {
+            $errors[] = "Failed to save ID picture.";
         }
     }
 
@@ -191,12 +181,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($exists) {
                     $stmt = $pdo->prepare("
-                                        UPDATE enrollment_history
-                                        SET 
-                                            status = 'current',
-                                            created_at = CONVERT_TZ(NOW(), '+00:00', '+08:00')
-                                        WHERE id = ?
-                                    ");
+                        UPDATE enrollment_history
+                        SET 
+                            status = 'current',
+                            created_at = CONVERT_TZ(NOW(), '+00:00', '+08:00')
+                        WHERE id = ?
+                    ");
                     $stmt->execute([$exists]);
                 } else {
                     $stmt = $pdo->prepare("
@@ -253,6 +243,71 @@ $currentSY = $currentSY ?? '';
 require_once '../../includes/header.php';
 ?>
 
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <style>
+        .crop-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .crop-modal-content {
+            background-color: #fff;
+            margin: 2% auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 8px;
+        }
+
+        .crop-container {
+            max-height: 500px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .crop-container img {
+            max-width: 100%;
+        }
+
+        .crop-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #cameraContainer {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        #cameraPreview {
+            max-width: 100%;
+            width: 400px;
+            background: #000;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+            margin: 10px auto;
+            display: block;
+        }
+
+        .camera-controls {
+            margin-top: 10px;
+        }
+
+        .camera-controls button {
+            margin: 0 5px;
+        }
+    </style>
+</head>
+
 <div class="row">
     <div class="col-md-12">
         <h2>Edit Student</h2>
@@ -262,23 +317,60 @@ require_once '../../includes/header.php';
             <div class="alert alert-danger"><?= $error ?></div>
         <?php endif; ?>
 
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data" id="studentForm">
             <div class="row">
                 <div class="col-md-6">
                     <h4>Student Information</h4>
 
                     <div class="row g-3">
-                        <div class="col-md-6 text-center">
+                        <div class="col-md-12 text-center">
                             <div class="mb-3">
-                                <img src="" id="newIdPicturePreview" alt="" class="img-thumbnail mb-2" style="width: 200px; height: 200px; object-fit: cover;">
-                                <div class="form-text">New ID Picture</div>
+                                <?php if (!empty($student['idPicturePath'])): ?>
+                                    <img src="../../uploads/studentProfiles/<?= htmlspecialchars($student['idPicturePath']) ?>" 
+                                         id="currentIdPicture" 
+                                         alt="Current ID Picture" 
+                                         class="img-thumbnail mb-2" 
+                                         style="width: 200px; height: 200px; object-fit: cover;">
+                                    <div class="form-text">Current ID Picture</div>
+                                <?php else: ?>
+                                    <div class="alert alert-info">No ID picture uploaded</div>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <img src="" id="newIdPicturePreview" alt="" class="img-thumbnail mb-2" style="width: 200px; height: 200px; object-fit: cover; display: none;">
+                                <div class="form-text" id="newPictureLabel" style="display: none;">New ID Picture (Preview)</div>
                             </div>
                         </div>
 
                         <div class="col-md-12">
-                            <label for="id_picture" class="form-label">Update ID Picture</label>
-                            <input type="file" class="form-control" id="id_picture" name="id_picture" accept="image/*">
-                            <div class="form-text">Upload a new passport-size photo (JPG, PNG, max 2MB)</div>
+                            <label class="form-label">Update ID Picture</label>
+                            
+                            <div class="btn-group w-100 mb-2" role="group">
+                                <button type="button" class="btn btn-outline-primary" id="useCameraBtn">
+                                    <i class="bi bi-camera"></i> Use Camera
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" id="useFileBtn">
+                                    <i class="bi bi-upload"></i> Upload File
+                                </button>
+                            </div>
+
+                            <div id="cameraContainer" style="display:none;">
+                                <video id="cameraPreview" autoplay playsinline></video>
+                                <div class="camera-controls">
+                                    <button type="button" class="btn btn-success" id="captureBtn">
+                                        <i class="bi bi-camera-fill"></i> Capture Photo
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="stopCameraBtn">
+                                        <i class="bi bi-x-circle"></i> Cancel
+                                    </button>
+                                </div>
+                            </div>
+
+                            <input type="file" id="fileInput" accept="image/*" style="display:none;">
+                            <input type="hidden" name="croppedImage" id="croppedImageData">
+                            
+                            <div class="form-text">Take a photo or upload a passport-size photo (JPG, PNG, max 2MB)</div>
                         </div>
                     </div>
 
@@ -316,8 +408,12 @@ require_once '../../includes/header.php';
                     </div>
                     <div class="mb-3">
                         <label for="mobile_number" class="form-label">Mobile Number</label>
-                        <input type="tel" class="form-control" id="mobile_number" name="mobile_number"
-                            value="<?= htmlspecialchars($student['mobile_number'] ?? '') ?>">
+                        <div class="input-group">
+                            <span class="input-group-text">+63</span>
+                            <input type="tel" class="form-control" id="mobile_number" name="mobile_number"
+                                value="<?= htmlspecialchars(preg_replace('/^\+63/', '', $student['mobile_number'] ?? '')) ?>" 
+                                placeholder="9XXXXXXXXX" maxlength="10" pattern="9[0-9]{9}">
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="grade_level" class="form-label">Grade Level</label>
@@ -334,31 +430,6 @@ require_once '../../includes/header.php';
                         <input type="text" class="form-control" id="school_year" name="school_year"
                             value="<?= htmlspecialchars($currentSY) ?>">
                     </div>
-
-                    <script>
-                        document.addEventListener("DOMContentLoaded", function() {
-                            const schoolYearInput = document.getElementById("school_year");
-                            const statusSelect = document.getElementById("status");
-
-                            function computeSchoolYear() {
-                                const year = new Date().getFullYear();
-                                return `${year} - ${year + 1}`;
-                            }
-
-                            if (statusSelect.value === "Active" && !schoolYearInput.value) {
-                                schoolYearInput.value = computeSchoolYear();
-                            }
-
-                            statusSelect.addEventListener("change", () => {
-                                const status = statusSelect.value;
-                                if (status === "Active") {
-                                    schoolYearInput.value = computeSchoolYear();
-                                } else {
-                                    schoolYearInput.value = "";
-                                }
-                            });
-                        });
-                    </script>
                     <div class="mb-3">
                         <label for="status" class="form-label">Status</label>
                         <select class="form-select" id="status" name="status" required>
@@ -388,8 +459,12 @@ require_once '../../includes/header.php';
                     </div>
                     <div class="mb-3">
                         <label for="parent_mobile_number" class="form-label">Mobile Number</label>
-                        <input type="tel" class="form-control" id="parent_mobile_number" name="parent_mobile_number"
-                            value="<?= htmlspecialchars($parent['mobile_number'] ?? '') ?>">
+                        <div class="input-group">
+                            <span class="input-group-text">+63</span>
+                            <input type="tel" class="form-control" id="parent_mobile_number" name="parent_mobile_number"
+                                value="<?= htmlspecialchars(preg_replace('/^\+63/', '', $parent['mobile_number'] ?? '')) ?>" 
+                                placeholder="9XXXXXXXXX" maxlength="10" pattern="9[0-9]{9}">
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="parent_email" class="form-label">Email Address</label>
@@ -411,93 +486,194 @@ require_once '../../includes/header.php';
     </div>
 </div>
 
+<div id="cropModal" class="crop-modal">
+    <div class="crop-modal-content">
+        <h4 class="text-center mb-3">Crop Your Photo</h4>
+        <div class="crop-container">
+            <img id="cropImage" src="">
+        </div>
+        <div class="crop-buttons">
+            <button type="button" class="btn btn-success" id="cropConfirm">
+                <i class="bi bi-check-circle"></i> Crop & Use
+            </button>
+            <button type="button" class="btn btn-secondary" id="cropCancel">
+                <i class="bi bi-x-circle"></i> Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const fileInput = document.getElementById('id_picture');
-        const newImagePreview = document.getElementById('newIdPicturePreview');
+    document.addEventListener("DOMContentLoaded", function() {
+        const schoolYearInput = document.getElementById("school_year");
+        const statusSelect = document.getElementById("status");
 
-        fileInput.addEventListener('change', function() {
-            const file = this.files[0];
+        function computeSchoolYear() {
+            const year = new Date().getFullYear();
+            return `${year} - ${year + 1}`;
+        }
 
-            if (file) {
-                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-                if (!allowedTypes.includes(file.type)) {
-                    alert('Only JPG, PNG, and GIF files are allowed.');
-                    this.value = '';
-                    newImagePreview.src = '';
-                    newImagePreview.style.display = 'none';
-                    return;
-                }
+        if (statusSelect.value === "Active" && !schoolYearInput.value) {
+            schoolYearInput.value = computeSchoolYear();
+        }
 
-                if (file.size > 2 * 1024 * 1024) {
-                    alert('File size must be less than 2MB.');
-                    this.value = '';
-                    newImagePreview.src = '';
-                    newImagePreview.style.display = 'none';
-                    return;
-                }
-
-                const reader = new FileReader();
-
-                reader.addEventListener('load', function() {
-                    newImagePreview.src = reader.result;
-                    newImagePreview.style.display = 'block';
-                });
-
-                reader.readAsDataURL(file);
+        statusSelect.addEventListener("change", () => {
+            const status = statusSelect.value;
+            if (status === "Active") {
+                schoolYearInput.value = computeSchoolYear();
             } else {
-                newImagePreview.src = '';
-                newImagePreview.style.display = 'none';
-            }
-        });
-
-        const dobInput = document.getElementById('date_of_birth');
-        dobInput.addEventListener('change', function() {
-            if (this.value) {
-                const dob = new Date(this.value);
-                const today = new Date();
-                let age = today.getFullYear() - dob.getFullYear();
-                const monthDiff = today.getMonth() - dob.getMonth();
-
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-                    age--;
-                }
-
-                console.log('Age:', age);
+                schoolYearInput.value = "";
             }
         });
     });
-</script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
+    let cropper = null;
+    let stream = null;
+
+    const fileInput = document.getElementById('fileInput');
+    const newImagePreview = document.getElementById('newIdPicturePreview');
+    const newPictureLabel = document.getElementById('newPictureLabel');
+    const cropModal = document.getElementById('cropModal');
+    const cropImage = document.getElementById('cropImage');
+    const cameraContainer = document.getElementById('cameraContainer');
+    const video = document.getElementById('cameraPreview');
+
+    document.getElementById('useFileBtn').addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 2 * 1024 * 1024) {
+            alert('File size must be less than 2MB');
+            fileInput.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            cropImage.src = event.target.result;
+            cropModal.style.display = 'block';
+            initCropper();
+        };
+        reader.readAsDataURL(file);
+    });
+
+    document.getElementById('useCameraBtn').addEventListener('click', async () => {
+        cameraContainer.style.display = 'block';
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user' },
+                audio: false
+            });
+            video.srcObject = stream;
+        } catch (err) {
+            alert('Cannot access camera: ' + err.message);
+            cameraContainer.style.display = 'none';
+        }
+    });
+
+    document.getElementById('captureBtn').addEventListener('click', () => {
+        if (!stream) return;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
+        cropImage.src = canvas.toDataURL('image/jpeg');
+        cropModal.style.display = 'block';
+        initCropper();
+        stopCamera();
+    });
+
+    document.getElementById('stopCameraBtn').addEventListener('click', stopCamera);
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        cameraContainer.style.display = 'none';
+    }
+
+    function initCropper() {
+        if (cropper) {
+            cropper.destroy();
+        }
+        
+        cropper = new Cropper(cropImage, {
+            aspectRatio: 1,
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 0.8,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+        });
+    }
+
+    document.getElementById('cropConfirm').addEventListener('click', () => {
+        if (!cropper) return;
+        
+        const canvas = cropper.getCroppedCanvas({
+            width: 400,
+            height: 400,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
+        });
+        
+        const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        
+        newImagePreview.src = croppedDataUrl;
+        newImagePreview.style.display = 'block';
+        newPictureLabel.style.display = 'block';
+        
+        document.getElementById('croppedImageData').value = croppedDataUrl;
+        
+        cropModal.style.display = 'none';
+        cropper.destroy();
+        cropper = null;
+    });
+
+    document.getElementById('cropCancel').addEventListener('click', () => {
+        cropModal.style.display = 'none';
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        fileInput.value = '';
+    });
+
+    document.getElementById('studentForm').addEventListener('submit', function(e) {
         const dobInput = document.getElementById('date_of_birth');
-        dobInput.addEventListener('change', function() {
-            if (this.value) {
-                const dob = new Date(this.value);
-                const today = new Date();
-                let age = today.getFullYear() - dob.getFullYear();
-                const monthDiff = today.getMonth() - dob.getMonth();
-
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-                    age--;
-                }
-
-                console.log('Age:', age);
+        if (dobInput.value) {
+            const dob = new Date(dobInput.value);
+            const today = new Date();
+            if (dob > today) {
+                e.preventDefault();
+                alert('Date of birth cannot be in the future.');
+                return false;
             }
-        });
-
-        const fileInput = document.getElementById('id_picture');
-        fileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    console.log('File selected:', file.name);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        }
+        
+        const studentMobile = document.getElementById('mobile_number');
+        const parentMobile = document.getElementById('parent_mobile_number');
+        
+        if (studentMobile.value && !studentMobile.value.startsWith('+63')) {
+            studentMobile.value = '+63' + studentMobile.value;
+        }
+        
+        if (parentMobile.value && !parentMobile.value.startsWith('+63')) {
+            parentMobile.value = '+63' + parentMobile.value;
+        }
     });
 </script>
 

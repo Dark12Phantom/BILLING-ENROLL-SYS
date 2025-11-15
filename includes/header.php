@@ -1,3 +1,16 @@
+<?php
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'];
+$scriptName = dirname($_SERVER['SCRIPT_NAME']);
+
+$baseDir = '/BILLING-ENROLL-SYS';
+if (strpos($scriptName, 'BILLING-ENROLL-SYS') !== false) {
+    $baseDir = substr($scriptName, 0, strpos($scriptName, 'BILLING-ENROLL-SYS') + strlen('BILLING-ENROLL-SYS'));
+}
+
+$baseUrl = $protocol . '://' . $host . $baseDir;
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -10,13 +23,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link href="../../../assets/css/style.css" rel="stylesheet">
-    <link href="../../assets/css/style.css" rel="stylesheet">
-    <link href="../assets/css/style.css" rel="stylesheet">
-    <link rel="icon" href="../logo.png" type="image/png">
-    <link rel="icon" href="../../logo.png" type="image/png">
-    <link rel="icon" href="../../../logo.png" type="image/png">
-    <link rel="icon" href="../../../../logo.png" type="image/png">
+    
+    <link href="<?php echo $baseUrl; ?>/assets/css/style.css" rel="stylesheet">
+    <link rel="icon" href="<?php echo $baseUrl; ?>/logo.png" type="image/png">
     <style>
         :root {
             --primary-color: #3498db;
