@@ -1,12 +1,10 @@
 <?php
 require_once 'includes/config.php';
 require_once 'includes/db.php';
-require_once 'altcha-verify.php';
 
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 
-// Check if already logged in
 if (isset($_SESSION['user_id'])) {
     if ($_SESSION['role'] === 'admin') {
         header("Location: admin/dashboard.php");
@@ -18,12 +16,16 @@ if (isset($_SESSION['user_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-    $altcha_payload = $_POST['altcha'] ?? '';
+    $username = $_POST['username'] ?? '';
+    $password = $_POST['password'] ?? '';
+    $captcha  = $_POST['captcha'] ?? '';
 
-    if (!verifyAltcha($altcha_payload)) {
-        $error = "Invalid security verification. Please try again.";
+    if (!isset($_SESSION['captcha_answer']) || intval(trim($captcha)) !== $_SESSION['captcha_answer']) {
+        $error = "Incorrect CAPTCHA answer.";
+        $num1 = rand(1, 10);
+        $num2 = rand(1, 10);
+        $_SESSION['captcha_answer'] = $num1 + $num2;
+        $_SESSION['captcha_question'] = "What is $num1 + $num2?";
     } else {
         $stmt = $pdo->prepare("
             SELECT u.*, ut.user_type 
@@ -55,10 +57,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = "Invalid username or password";
         }
+
+        $num1 = rand(1, 10);
+        $num2 = rand(1, 10);
+        $_SESSION['captcha_answer'] = $num1 + $num2;
+        $_SESSION['captcha_question'] = "What is $num1 + $num2?";
     }
 }
-?>
 
+if (!isset($_SESSION['captcha_answer'])) {
+    $num1 = rand(1, 10);
+    $num2 = rand(1, 10);
+    $_SESSION['captcha_answer'] = $num1 + $num2;
+    $_SESSION['captcha_question'] = "What is $num1 + $num2?";
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -161,11 +174,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transform: translateY(-2px);
         }
 
-        .btn-login:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
         .forgot-password {
             color: var(--accent-color);
             text-decoration: none;
@@ -199,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         <?php endif; ?>
 
-                        <form method="POST" id="loginForm" class="animate__animated animate__fadeIn animate__delay-1s">
+                        <form method="POST" class="animate__animated animate__fadeIn animate__delay-1s">
                             <div class="mb-4">
                                 <label for="username" class="form-label fw-bold">Username</label>
                                 <div class="input-group">
@@ -219,17 +227,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             </div>
 
-                            <!-- Altcha Widget -->
-                            <!-- <div class="mb-4">
-                                <altcha-widget 
-                                    challengeurl="challenge.php"
-                                    hidefooter
-                                    name="altcha"
-                                ></altcha-widget>
-                            </div> -->
+                            <!-- CAPTCHA -->
+                            <div class="mb-4">
+                                <label for="captcha" class="form-label fw-bold">CAPTCHA</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent">
+                                        <i class="fas fa-question-circle text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control input-with-icon" id="captcha" name="captcha" placeholder="<?php echo $_SESSION['captcha_question']; ?>" required>
+                                </div>
+                            </div>
 
                             <div class="d-grid gap-2 mt-4">
-                                <button type="submit" class="btn btn-login btn-lg text-white" id="submitBtn">
+                                <button type="submit" class="btn btn-login btn-lg text-white">
                                     <i class="fas fa-sign-in-alt me-2"></i> LOGIN
                                 </button>
                             </div>
@@ -243,32 +253,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <!-- Altcha Script -->
-    <script async defer src="https://cdn.jsdelivr.net/gh/altcha-org/altcha@main/dist/altcha.min.js" type="module"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Disable submit until Altcha is verified
-        const submitBtn = document.getElementById('submitBtn');
-        const altchaWidget = document.querySelector('altcha-widget');
-        
-        if (altchaWidget) {
-            submitBtn.disabled = true;
-            
-            altchaWidget.addEventListener('statechange', (event) => {
-                if (event.detail.state === 'verified') {
-                    submitBtn.disabled = false;
-                } else {
-                    submitBtn.disabled = true;
-                }
-            });
-        }
-
-        // Toggle password visibility
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             const icon = this.querySelector('i');
-
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
                 icon.classList.remove('fa-eye');
@@ -284,7 +273,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             input.addEventListener('focus', function() {
                 this.parentElement.parentElement.classList.add('animate__animated', 'animate__pulse');
             });
-
             input.addEventListener('blur', function() {
                 this.parentElement.parentElement.classList.remove('animate__animated', 'animate__pulse');
             });
