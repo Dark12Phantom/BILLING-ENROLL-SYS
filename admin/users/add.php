@@ -18,7 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'address',
         'username',
         'email',
-        'password'
+        'password',
+        'user_type'
     ];
 
     foreach ($requiredFields as $field) {
@@ -53,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'status' => 'Active',
             'address' => $_POST['address'],
             'mobile_number' => $_POST['mobile_number'],
-            'user_type' => 'staff'
+            'user_type' => strtolower($_POST['user_type'])
         ];
 
         $uploadDir = '../../uploads/profiles/';
@@ -263,6 +264,16 @@ require_once '../../includes/header.php';
                             <div class="mb-3">
                                 <label for="email" class="form-label required-field">Email Address</label>
                                 <input type="email" class="form-control" id="email" name="email" value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="user_type" class="form-label required-field">Staff Role</label>
+                                <select class="form-select" id="user_type" name="user_type" required>
+                                    <option value="">Select Role</option>
+                                    <option value="cashier" <?php echo (isset($_POST['user_type']) && $_POST['user_type'] === 'cashier') ? 'selected' : ''; ?>>Cashier</option>
+                                    <option value="registrar" <?php echo (isset($_POST['user_type']) && $_POST['user_type'] === 'registrar') ? 'selected' : ''; ?>>Registrar</option>
+                                    <option value="teacher" <?php echo (isset($_POST['user_type']) && $_POST['user_type'] === 'teacher') ? 'selected' : ''; ?>>Teacher</option>
+                                </select>
                             </div>
 
                             <div class="mb-3">

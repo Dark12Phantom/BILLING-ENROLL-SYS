@@ -172,15 +172,15 @@ require_once '../includes/staff-header.php';
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const feeSelect = document.getElementById('fee_id');
-        const discountCheckboxes = document.querySelectorAll('.discount-checkbox');
-        const originalAmountSpan = document.getElementById('original_amount');
-        const discountAmountSpan = document.getElementById('discount_amount');
-        const finalAmountSpan = document.getElementById('final_amount');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const feeSelect = document.getElementById('fee_id');
+            const discountCheckboxes = document.querySelectorAll('.discount-checkbox');
+            const originalAmountSpan = document.getElementById('original_amount');
+            const discountAmountSpan = document.getElementById('discount_amount');
+            const finalAmountSpan = document.getElementById('final_amount');
 
-        let originalAmount = 0;
+            let originalAmount = 0;
 
         const discountMap = {
             referral: 500,
@@ -189,65 +189,63 @@ require_once '../includes/staff-header.php';
             fullpayment: 1000
         };
 
-        feeSelect.addEventListener('change', function() {
-            if (this.value) {
-                const selectedOption = this.options[this.selectedIndex];
-                const amountMatch = selectedOption.text.match(/₱([\d,]+\.\d{2})/);
-                if (amountMatch) {
-                    originalAmount = parseFloat(amountMatch[1].replace(/,/g, ''));
-                    originalAmountSpan.textContent = '₱' + originalAmount.toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-                    calculateDiscount();
-                }
-            } else {
-                originalAmount = 0;
-                originalAmountSpan.textContent = '₱0.00';
+            function bindDiscountHandlers() {
+                if (!feeSelect || !originalAmountSpan || !discountAmountSpan || !finalAmountSpan) return;
+                feeSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        const selectedOption = this.options[this.selectedIndex];
+                        const amountMatch = selectedOption.text.match(/₱([\d,]+\.\d{2})/);
+                        if (amountMatch) {
+                            originalAmount = parseFloat(amountMatch[1].replace(/,/g, ''));
+                            originalAmountSpan.textContent = '₱' + originalAmount.toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                            calculateDiscount();
+                        }
+                    } else {
+                        originalAmount = 0;
+                        originalAmountSpan.textContent = '₱0.00';
+                        calculateDiscount();
+                    }
+                });
+                discountCheckboxes.forEach(cb => {
+                    cb.addEventListener('change', calculateDiscount);
+                });
                 calculateDiscount();
             }
-        });
 
-        discountCheckboxes.forEach(cb => {
-            cb.addEventListener('change', calculateDiscount);
-        });
-
-        function calculateDiscount() {
-            let discountAmount = 0;
-
-            discountCheckboxes.forEach(cb => {
-                if (cb.checked && discountMap[cb.value]) {
-                    discountAmount += discountMap[cb.value];
+            function calculateDiscount() {
+                if (!originalAmountSpan || !discountAmountSpan || !finalAmountSpan) return;
+                let discountAmount = 0;
+                discountCheckboxes.forEach(cb => {
+                    if (cb.checked && discountMap[cb.value]) {
+                        discountAmount += discountMap[cb.value];
+                    }
+                });
+                if (discountAmount > originalAmount) {
+                    discountAmount = originalAmount;
                 }
-            });
-
-            if (discountAmount > originalAmount) {
-                discountAmount = originalAmount;
+                const finalAmount = originalAmount - discountAmount;
+                discountAmountSpan.textContent = '-₱' + discountAmount.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                finalAmountSpan.textContent = '₱' + finalAmount.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                if (discountAmount > 0) {
+                    discountAmountSpan.className = 'text-success fw-bold';
+                    finalAmountSpan.className = 'h5 text-success';
+                } else {
+                    discountAmountSpan.className = 'text-muted';
+                    finalAmountSpan.className = 'h5 text-primary';
+                }
             }
 
-            const finalAmount = originalAmount - discountAmount;
-
-            discountAmountSpan.textContent = '-₱' + discountAmount.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-
-            finalAmountSpan.textContent = '₱' + finalAmount.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-
-            if (discountAmount > 0) {
-                discountAmountSpan.className = 'text-success fw-bold';
-                finalAmountSpan.className = 'h5 text-success';
-            } else {
-                discountAmountSpan.className = 'text-muted';
-                finalAmountSpan.className = 'h5 text-primary';
-            }
-        }
-
-        calculateDiscount();
-    });
-</script>
+            bindDiscountHandlers();
+        });
+    </script>
 
 <?php require_once '../includes/staff-footer.php'; ?>
