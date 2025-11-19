@@ -153,48 +153,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $stmt->execute($studentData);
 
-            $stmt = $pdo->prepare("
-                SELECT school_year 
-                FROM enrollment_history
-                WHERE student_id = ? AND status = 'current'
-                LIMIT 1
-            ");
-            $stmt->execute([$studentId]);
-            $existingCurrentSY = $stmt->fetchColumn();
+            $year = (int)date('Y');
+            $syPast = ($year - 1) . ' - ' . $year;
+            $syCurrent = $year . ' - ' . ($year + 1);
+            $syNext = ($year + 1) . ' - ' . ($year + 2);
+            $postedSY = $studentEnrollmentData['schoolYear'] ?? null;
 
-            $currentSY = $studentEnrollmentData['schoolYear'];
-            if ($currentSY === $existingCurrentSY) {
-            } else if ($currentSY !== null && $currentSY !== '') {
-                $stmt = $pdo->prepare("
-                    UPDATE enrollment_history
-                    SET status = 'past'
-                    WHERE student_id = ?
-                ");
-                $stmt->execute([$studentId]);
-                $stmt = $pdo->prepare("
-                    SELECT id FROM enrollment_history
-                    WHERE student_id = ? AND school_year = ?
-                    LIMIT 1
-                ");
-                $stmt->execute([$studentId, $currentSY]);
-                $exists = $stmt->fetchColumn();
-
-                if ($exists) {
-                    $stmt = $pdo->prepare("
-                        UPDATE enrollment_history
-                        SET 
-                            status = 'current',
-                            created_at = CONVERT_TZ(NOW(), '+00:00', '+08:00')
-                        WHERE id = ?
-                    ");
-                    $stmt->execute([$exists]);
+            $upsert = function($sy, $status) use ($pdo, $studentId) {
+                $stmt = $pdo->prepare("SELECT id, status FROM enrollment_history WHERE student_id = ? AND school_year = ? LIMIT 1");
+                $stmt->execute([$studentId, $sy]);
+                $row = $stmt->fetch();
+                if ($row && isset($row['id'])) {
+                    if ($row['status'] !== $status) {
+                        $upd = $pdo->prepare("UPDATE enrollment_history SET status = ? WHERE id = ?");
+                        $upd->execute([$status, $row['id']]);
+                    }
                 } else {
-                    $stmt = $pdo->prepare("
-                        INSERT INTO enrollment_history (student_id, school_year, status)
-                        VALUES (?, ?, 'current')
-                    ");
-                    $stmt->execute([$studentId, $currentSY]);
+                    $ins = $pdo->prepare("INSERT INTO enrollment_history (student_id, school_year, status) VALUES (?, ?, ?)");
+                    $ins->execute([$studentId, $sy, $status]);
                 }
+            };
+
+            $upsert($syPast, 'past');
+            $upsert($syCurrent, 'current');
+            if ($postedSY === $syNext) {
+                $upsert($syNext, 'pre-enrollment');
             }
 
             if ($parent) {

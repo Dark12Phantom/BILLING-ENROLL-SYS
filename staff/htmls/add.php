@@ -114,10 +114,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute($studentData);
         $studentId = $pdo->lastInsertId();
 
+        $year = (int)date('Y');
+        $syPast = ($year - 1) . ' - ' . $year;
+        $syCurrent = $year . ' - ' . ($year + 1);
+        $syNext = ($year + 1) . ' - ' . ($year + 2);
+
         $studentEnrollmentData['student_id'] = $studentId;
-        $stmt = $pdo->prepare("INSERT INTO enrollment_history (student_id, school_year, status)
-                                VALUES (:student_id, :school_year, :status)");
-        $stmt->execute($studentEnrollmentData);
+
+        $upsert = function($sy, $status) use ($pdo, $studentId) {
+            $check = $pdo->prepare("SELECT id FROM enrollment_history WHERE student_id = ? AND school_year = ? LIMIT 1");
+            $check->execute([$studentId, $sy]);
+            $existingId = $check->fetchColumn();
+            if ($existingId) {
+                $upd = $pdo->prepare("UPDATE enrollment_history SET status = ? WHERE id = ?");
+                $upd->execute([$status, $existingId]);
+            } else {
+                $ins = $pdo->prepare("INSERT INTO enrollment_history (student_id, school_year, status) VALUES (?, ?, ?)");
+                $ins->execute([$studentId, $sy, $status]);
+            }
+        };
+
+        $upsert($syPast, 'past');
+        $upsert($syCurrent, 'current');
 
         $parentData['student_id'] = $studentId;
         $stmt = $pdo->prepare("INSERT INTO parents (student_id, first_name, last_name, relationship, mobile_number, email, address) 

@@ -58,6 +58,36 @@ function protectPage()
         header("Location: $root");
         exit();
     }
+    try {
+        global $pdo;
+        $today = new DateTime('now');
+        $june = new DateTime($today->format('Y') . '-06-01');
+        if ($today >= $june) {
+            $year = (int)$today->format('Y');
+            $syCurrent = $year . ' - ' . ($year + 1);
+            $syNext = ($year + 1) . ' - ' . ($year + 2);
+            $updPast = $pdo->prepare("UPDATE enrollment_history SET status = 'past' WHERE school_year = ? AND status = 'current'");
+            $updPast->execute([$syCurrent]);
+            $insCurrFromPre = $pdo->prepare("INSERT INTO enrollment_history (student_id, school_year, status)
+                SELECT eh.student_id, eh.school_year, 'current'
+                FROM enrollment_history eh
+                WHERE eh.school_year = ? AND eh.status = 'pre-enrollment'
+                  AND NOT EXISTS (
+                    SELECT 1 FROM enrollment_history eh2
+                    WHERE eh2.student_id = eh.student_id AND eh2.school_year = eh.school_year AND eh2.status = 'current'
+                )");
+            $insCurrFromPre->execute([$syNext]);
+            $insMissing = $pdo->prepare("INSERT INTO enrollment_history (student_id, school_year, status)
+                SELECT s.id, ?, 'pre-enrollment'
+                FROM students s
+                WHERE (s.status IS NULL OR s.status <> 'Inactive')
+                  AND NOT EXISTS (
+                    SELECT 1 FROM enrollment_history eh
+                    WHERE eh.student_id = s.id AND eh.school_year = ? AND eh.status = 'pre-enrollment'
+                )");
+            $insMissing->execute([$syNext, $syNext]);
+        }
+    } catch (Exception $e) {}
 }
 function protectLoginPage()
 {

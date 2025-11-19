@@ -8,6 +8,11 @@ if ($year === 0) {
     exit;
 }
 
+$currentYear = (int) date('Y');
+$statusFilter = ($year === $currentYear)
+    ? " AND eh.status IN ('current','pre-enrollment')"
+    : " AND eh.status = 'past'";
+
 $sql = "
     SELECT 
         s.id,
@@ -23,7 +28,7 @@ $sql = "
     FROM enrollment_history eh
     INNER JOIN students s 
             ON s.id = eh.student_id
-    WHERE YEAR(eh.created_at) = ?
+    WHERE YEAR(eh.created_at) = ?" . $statusFilter . "
     ORDER BY s.last_name, s.first_name
 ";
 
@@ -45,7 +50,8 @@ if (empty($students)) {
       <th>Name</th>
       <th>Grade Level</th>
       <th>Section</th>
-      <th>Status</th>
+      <th>Student Status</th>
+      <th>Enrollment Status</th>
       <th>School Year</th>
     </tr>
   </thead>
@@ -57,7 +63,22 @@ if (empty($students)) {
         <td><?= htmlspecialchars($stu['first_name'] . ' ' . $stu['last_name']) ?></td>
         <td><?= htmlspecialchars($stu['grade_level']) ?></td>
         <td><?= htmlspecialchars($stu['section']) ?></td>
-        <td><?= htmlspecialchars($stu['status']) ?></td>
+        <td>
+          <?php
+            $studentStatus = $stu['status'] ?? 'Unknown';
+            $ssl = strtolower($studentStatus);
+            $sBadge = $ssl === 'active' ? 'success' : ($ssl === 'inactive' ? 'warning' : ($ssl === 'graduated' ? 'info' : 'secondary'));
+          ?>
+          <span class="badge bg-<?= htmlspecialchars($sBadge) ?>"><?= htmlspecialchars($studentStatus) ?></span>
+        </td>
+        <td>
+          <?php
+            $es = strtolower($stu['enrollmentStatus'] ?? '');
+            $label = $stu['enrollmentStatus'] ?? '';
+            $badge = $es === 'current' ? 'success' : ($es === 'pre-enrollment' ? 'warning' : 'secondary');
+          ?>
+          <span class="badge bg-<?= htmlspecialchars($badge) ?>"><?= htmlspecialchars($label) ?></span>
+        </td>
         <td><?= htmlspecialchars($stu['schoolYear']) ?></td>
       </tr>
     <?php endforeach; ?>
