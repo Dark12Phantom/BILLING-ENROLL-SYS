@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Nov 08, 2025 at 03:15 AM
+-- Generation Time: Nov 19, 2025 at 03:24 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -128,7 +128,8 @@ CREATE TABLE `parents` (
   `mobile_number` varchar(20) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `address` text DEFAULT NULL,
-  `idParentPicturePath` text NOT NULL
+  `idParentPicturePath` text DEFAULT NULL,
+  `isDeleted` tinyint(4) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
@@ -195,10 +196,11 @@ CREATE TABLE `students` (
   `section` varchar(20) DEFAULT NULL,
   `status` enum('Active','Inactive','Graduated') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `idPicturePath` text NOT NULL,
+  `idPicturePath` varchar(1000) NOT NULL,
   `lastUpdated` timestamp NULL DEFAULT NULL,
   `createdBy` text NOT NULL,
-  `last_updatedBy` text DEFAULT NULL
+  `last_updatedBy` text DEFAULT NULL,
+  `isDeleted` tinyint(4) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
