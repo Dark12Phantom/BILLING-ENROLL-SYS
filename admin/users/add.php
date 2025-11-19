@@ -228,7 +228,7 @@ require_once '../../includes/header.php';
 
                             <div class="mb-3">
                                 <label for="staff_id" class="form-label required-field">Staff ID</label>
-                                <input type="text" class="form-control" id="staff_id" name="staff_id" value="<?php echo isset($_POST['staff_id']) ? htmlspecialchars($_POST['staff_id']) : ''; ?>" required>
+                                <input type="text" class="form-control" id="staff_id" name="staff_id" minlength="12" maxlength="12" value="<?php echo isset($_POST['staff_id']) ? htmlspecialchars($_POST['staff_id']) : ''; ?>" required>
                             </div>
                             <div class="mb-3">
                                 <label for="first_name" class="form-label required-field">First Name</label>

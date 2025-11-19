@@ -6,13 +6,16 @@ require_once '../../includes/header.php';
 
 // Search and filter
 $search = isset($_GET['search']) ? $_GET['search'] : '';
-$query = "SELECT ut.*, u.last_login 
+$query = "SELECT ut.*, u.last_login, u.role 
           FROM user_tables ut
-          LEFT JOIN users u ON ut.id = u.id
-          WHERE ut.first_name LIKE ? 
-             OR ut.last_name LIKE ? 
-             OR ut.staff_id LIKE ? 
-             OR ut.user_type LIKE ?
+          LEFT JOIN users u ON ut.userID = u.id
+          WHERE (
+              ut.first_name LIKE ? 
+              OR ut.last_name LIKE ? 
+              OR ut.staff_id LIKE ? 
+              OR ut.user_type LIKE ?
+          )
+          AND COALESCE(ut.user_type, u.role) <> 'system'
           ORDER BY ut.last_name, ut.first_name";
 $params = ["%$search%", "%$search%", "%$search%", "%$search%"];
 
@@ -61,36 +64,24 @@ $users = $stmt->fetchAll();
                                 $lastLogin = $user['last_login']
                                     ? date("M d, Y h:i A", strtotime($user['last_login']))
                                     : 'Never';
-                                if ($user['user_type'] == 'admin') {
-                                    echo '<tr>';
-                                    echo '<td>' . htmlspecialchars($user['staff_id']) . '</td>';
-                                    echo '<td>' . htmlspecialchars($user['last_name']) . ', ' . htmlspecialchars($user['first_name']) . '</td>';
-                                    echo '<td>' . htmlspecialchars($user['staff_id']) . '</td>';
-                                    echo '<td>' . htmlspecialchars($user['user_type']) . '</td>';
-                                    echo '<td><span class="badge bg-' . $badge . '">' . htmlspecialchars($status) . '</span></td>';
-                                    echo '<td>
-                                    <a href="view.php?id=' . $user['id'] . '" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
-                                    <a href="edit.php?id=' . $user['id'] . '" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
-                                </td>';
-                                    echo '<td>' . htmlspecialchars($lastLogin) . '</td>';
-                                    echo '</tr>';
-                                } elseif ($user['user_type'] == 'staff') {
-                                    echo '<tr>';
-                                    echo '<td>' . htmlspecialchars($user['staff_id']) . '</td>';
-                                    echo '<td>' . htmlspecialchars($user['last_name']) . ', ' . htmlspecialchars($user['first_name']) . '</td>';
-                                    echo '<td>' . htmlspecialchars($user['staff_id']) . '</td>';
-                                    echo '<td>' . htmlspecialchars($user['user_type']) . '</td>';
-                                    echo '<td><span class="badge bg-'
-                                        . ($user['status'] == 'Active' ? 'success' : ($user['status'] == 'Inactive' ? 'warning' : 'secondary'))
-                                        . '">' . htmlspecialchars($user['status'] ?? 'Unknown') . '</span></td>';
-                                    echo '<td>
-                                    <a href="view.php?id=' . $user['id'] . '" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
-                                    <a href="edit.php?id=' . $user['id'] . '" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
-                                    <a href="delete.php?id=' . $user['id'] . '" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure?\')"><i class="fas fa-trash"></i></a>
-                                    </td>';
-                                    echo '<td>' . htmlspecialchars($lastLogin) . '</td>';
-                                    echo '</tr>';
+                                $accountType = !empty($user['user_type']) ? $user['user_type'] : ($user['role'] ?? 'Unknown');
+                                $accountTypeLabel = ucfirst($accountType);
+
+                                echo '<tr>';
+                                echo '<td>' . htmlspecialchars($user['staff_id'] ?? '') . '</td>';
+                                echo '<td>' . htmlspecialchars($user['last_name'] ?? '') . ', ' . htmlspecialchars($user['first_name'] ?? '') . '</td>';
+                                echo '<td>' . htmlspecialchars($user['staff_id'] ?? '') . '</td>';
+                                echo '<td>' . htmlspecialchars($accountTypeLabel) . '</td>';
+                                echo '<td><span class="badge bg-' . $badge . '">' . htmlspecialchars($status) . '</span></td>';
+                                echo '<td>' . htmlspecialchars($lastLogin ?? '') . '</td>';
+                                echo '<td>';
+                                echo '<a href="view.php?id=' . $user['id'] . '" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a> ';
+                                echo '<a href="edit.php?id=' . $user['id'] . '" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a> ';
+                                if (($user['role'] ?? '') !== 'admin') {
+                                    echo '<a href="delete.php?id=' . $user['id'] . '" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure?\')"><i class="fas fa-trash"></i></a>';
                                 }
+                                echo '</td>';
+                                echo '</tr>';
                             }
                             ?>
                         </tbody>

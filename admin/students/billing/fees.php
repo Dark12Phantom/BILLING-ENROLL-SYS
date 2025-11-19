@@ -134,6 +134,50 @@ require_once '../../../includes/header.php';
 </div>
 
 
+<!-- Add Fee Type Modal -->
+<div class="modal fade" id="addFeeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Fee Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="add-fee.php" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="fee_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="fee_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fee_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="fee_description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fee_amount" class="form-label">Amount</label>
+                        <input type="number" step="0.01" min="0" class="form-control" id="fee_amount" name="amount" required>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="is_recurring" name="is_recurring">
+                        <label class="form-check-label" for="is_recurring">Recurring</label>
+                    </div>
+                    <div id="frequency-container" style="display:none;">
+                        <label for="frequency" class="form-label">Frequency</label>
+                        <select class="form-select" id="frequency" name="frequency">
+                            <option value="Monthly">Monthly</option>
+                            <option value="Quarterly">Quarterly</option>
+                            <option value="Annual">Annual</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Fee Type</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Assign Fee Modal -->
 <div class="modal fade" id="assignFeeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
