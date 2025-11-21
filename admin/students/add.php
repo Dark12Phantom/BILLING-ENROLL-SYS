@@ -134,8 +134,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         };
 
-        $upsert($syPast, 'past');
-        $upsert($syCurrent, 'current');
+        $postedSY = trim($_POST['school_year'] ?? '');
+        if ($postedSY === '') {
+            $postedSY = $syCurrent;
+        }
+        $startYear = (int)preg_replace('/\D.*/', '', $postedSY);
+        $statusWanted = 'current';
+        if ($startYear === $year - 1) {
+            $statusWanted = 'past';
+        } elseif ($startYear === $year) {
+            $statusWanted = 'current';
+        } elseif ($startYear === $year + 1) {
+            $statusWanted = 'pre-enrollment';
+        }
+        $upsert($postedSY, $statusWanted);
 
         $parentData['student_id'] = $studentId;
         $stmt = $pdo->prepare("INSERT INTO parents (student_id, first_name, last_name, relationship, mobile_number, email, address) 

@@ -52,6 +52,17 @@ function protectPage()
         header("Location: ../login.php");
         exit();
     }
+    try {
+        global $pdo;
+        $today = new DateTime('now');
+        $june = new DateTime($today->format('Y') . '-06-01');
+        if ($today >= $june) {
+            $year = (int)$today->format('Y');
+            $syCurrent = $year . ' - ' . ($year + 1);
+            $updPast = $pdo->prepare("UPDATE enrollment_history SET status = 'past' WHERE school_year = ? AND status = 'current'");
+            $updPast->execute([$syCurrent]);
+        }
+    } catch (Exception $e) {}
 }
 
 function requireRole($allowedRoles = [])
