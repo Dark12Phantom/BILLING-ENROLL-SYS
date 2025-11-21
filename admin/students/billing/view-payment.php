@@ -30,14 +30,15 @@ if (!$payment) {
 // Fetch payment items (fees paid)
 $stmt = $pdo->prepare("SELECT pi.amount, f.name, sf.due_date
                       FROM payment_items pi
-                      JOIN student_fees sf ON pi.student_fee_id = sf.id
-                      JOIN fees f ON sf.fee_id = f.id
+                      LEFT JOIN student_fees sf ON pi.student_fee_id = sf.id
+                      LEFT JOIN fees f ON sf.fee_id = f.id
                       WHERE pi.payment_id = ?");
 $stmt->execute([$paymentId]);
 $paymentItems = $stmt->fetchAll();
 
 // Calculate total
-$total = array_sum(array_column($paymentItems, 'amount'));
+$itemsTotal = array_sum(array_column($paymentItems, 'amount'));
+$total = is_numeric($payment['amount']) ? (float)$payment['amount'] : (float)$itemsTotal;
 
 require_once '../../../includes/header.php';
 ?>
@@ -102,23 +103,32 @@ require_once '../../../includes/header.php';
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>Fee Description</th>
+                                <th>Fee Type</th>
                                 <th>Original Due Date</th>
                                 <th>Amount Paid</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($paymentItems as $item): ?>
+                            <?php if (!empty($paymentItems)): ?>
+                                <?php foreach ($paymentItems as $item): ?>
+                                    <tr>
+                                        <td><?= isset($item['name']) && $item['name'] ? htmlspecialchars($item['name']) : 'N/A' ?></td>
+                                        <td><?= isset($item['due_date']) && $item['due_date'] ? date('M d, Y', strtotime($item['due_date'])) : 'N/A' ?></td>
+                                        <td>₱<?= number_format($item['amount'], 2) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($item['name']) ?></td>
-                                    <td><?= date('M d, Y', strtotime($item['due_date'])) ?></td>
-                                    <td>₱<?= number_format($item['amount'], 2) ?></td>
+                                    <td>N/A</td>
+                                    <td>N/A</td>
+                                    <td>₱<?= number_format($total, 2) ?></td>
                                 </tr>
-                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                         <tfoot>
                             <tr class="table-active">
-                                <th colspan="2" class="text-end">Total Payment:</th>
+                                <th></th>
+                                <th class="text-end">Total Payment:</th>
                                 <th>₱<?= number_format($total, 2) ?></th>
                             </tr>
                         </tfoot>

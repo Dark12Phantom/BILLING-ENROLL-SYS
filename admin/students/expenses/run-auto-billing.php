@@ -115,7 +115,7 @@ try {
             ':payment_date' => $today,
             ':reference_number' => $temp_ref,
             ':period_covered' => $periodCovered,
-            ':paid_by' => 0 // System user ID
+            ':paid_by' => 2 // System user ID
         ]);
 
         // Step 2: Get the inserted expense ID

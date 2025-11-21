@@ -272,7 +272,6 @@ require_once '../../includes/header.php';
                                     <option value="">Select Role</option>
                                     <option value="cashier" <?php echo (isset($_POST['user_type']) && $_POST['user_type'] === 'cashier') ? 'selected' : ''; ?>>Cashier</option>
                                     <option value="registrar" <?php echo (isset($_POST['user_type']) && $_POST['user_type'] === 'registrar') ? 'selected' : ''; ?>>Registrar</option>
-                                    <option value="teacher" <?php echo (isset($_POST['user_type']) && $_POST['user_type'] === 'teacher') ? 'selected' : ''; ?>>Teacher</option>
                                 </select>
                             </div>
 

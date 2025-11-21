@@ -9,6 +9,7 @@ $query = "SELECT sf.*, f.name as fee_name, s.first_name, s.last_name, s.student_
           FROM student_fees sf 
           JOIN fees f ON sf.fee_id = f.id 
           JOIN students s ON sf.student_id = s.id 
+          WHERE s.isDeleted = '0'
           ORDER BY sf.due_date DESC";
 $stmt = $pdo->query($query);
 $studentFees = $stmt->fetchAll();
@@ -193,7 +194,7 @@ require_once '../../../includes/header.php';
                         <select class="form-select" id="student" name="student_id" required>
                             <option value="">Select Student</option>
                             <?php
-                            $stmt = $pdo->query("SELECT id, first_name, last_name, student_id FROM students ORDER BY last_name, first_name");
+                            $stmt = $pdo->query("SELECT id, first_name, last_name, student_id FROM students WHERE isDeleted = '0' ORDER BY last_name, first_name");
                             while ($student = $stmt->fetch()): ?>
                                 <option value="<?= $student['id'] ?>">
                                     <?= htmlspecialchars($student['last_name']) ?>, <?= htmlspecialchars($student['first_name']) ?> (<?= htmlspecialchars($student['student_id']) ?>)

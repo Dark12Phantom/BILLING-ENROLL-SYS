@@ -151,7 +151,6 @@ require_once '../../../includes/header.php';
 
             <div class="card-footer d-flex justify-content-between">
                 <span><strong>System Total:</strong> ₱<?= number_format($totalAmount ?? 0, 2) ?></span>
-                <a href="add-payment.php" class="btn btn-success"><i class="fas fa-plus"></i> Add Payment</a>
             </div>
         </div>
     </div>

@@ -346,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                     <div class="mb-3">
                                         <label for="schoolYear" class="form-label">School Year</label>
-                                        <input type="text" class="form-control" id="schoolYear" name="school_year" readonly>
+                                        <input type="text" class="form-control" id="schoolYear" name="school_year">
                                     </div>
                                 </div>
 
