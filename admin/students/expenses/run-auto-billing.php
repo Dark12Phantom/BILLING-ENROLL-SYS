@@ -25,7 +25,7 @@ try {
             ':amount' => $bill['amount'],
             ':evidence' => 'Auto-Billed',
             ':date_incurred' => $today,
-            ':approved_by' => 0 // System user
+            ':approved_by' => 2 // System user
         ]);
 
         $expense_id = $pdo->lastInsertId();

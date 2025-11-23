@@ -99,6 +99,7 @@ require_once '../../../includes/header.php';
                                 <th>Date</th>
                                 <th>Type</th>
                                 <th>Amount</th>
+                                <th>Description</th>
                                 <th>Reference Number</th>
                                 <th>Period Covered</th>
                                 <th>Paid By</th>
@@ -116,6 +117,7 @@ require_once '../../../includes/header.php';
                                         <td><?= date('M d, Y', strtotime($expense['payment_date'])) ?></td>
                                         <td><?= htmlspecialchars($expense['type']) ?></td>
                                         <td>₱<?= number_format($expense['amount'], 2) ?></td>
+                                        <td><?= htmlspecialchars($expense['description']) ?></td>
                                         <td><?= htmlspecialchars($expense['reference_number']) ?></td>
                                         <td><?= htmlspecialchars($expense['period_covered']) ?></td>
                                         <td><?= htmlspecialchars($expense['paid_by_name']) ?></td>
@@ -177,6 +179,10 @@ require_once '../../../includes/header.php';
                             <option value="Permit">Permit</option>
                             <option value="Registration">Registration</option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Amount</label>
+                        <textarea class="form-control" id="description" name="description" required>
                     </div>
                     <div class="mb-3">
                         <label for="amount" class="form-label">Amount</label>

@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $studentEnrollmentData['student_id'] = $studentId;
 
-        $upsert = function($sy, $status) use ($pdo, $studentId) {
+        $upsert = function ($sy, $status) use ($pdo, $studentId) {
             $check = $pdo->prepare("SELECT id FROM enrollment_history WHERE student_id = ? AND school_year = ? LIMIT 1");
             $check->execute([$studentId, $sy]);
             $existingId = $check->fetchColumn();
@@ -138,14 +138,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($postedSY === '') {
             $postedSY = $syCurrent;
         }
-        $startYear = (int)preg_replace('/\D.*/', '', $postedSY);
+        if (preg_match('/^\s*(\d{4})\s*[-–]\s*(\d{4})\s*$/', $postedSY, $m)) {
+            $startYear = (int)$m[1];
+            $endYear = (int)$m[2];
+        } else {
+            $startYear = $year;
+            $endYear = $year + 1;
+            $postedSY = $startYear . ' - ' . $endYear;
+        }
+        $today = new DateTime('now');
+        $schoolStart = new DateTime($startYear . '-06-01');
+        $nextSchoolStart = new DateTime(($startYear + 1) . '-06-01');
         $statusWanted = 'current';
-        if ($startYear === $year - 1) {
-            $statusWanted = 'past';
-        } elseif ($startYear === $year) {
-            $statusWanted = 'current';
-        } elseif ($startYear === $year + 1) {
+        if ($today < $schoolStart) {
             $statusWanted = 'pre-enrollment';
+        } elseif ($today >= $nextSchoolStart) {
+            $statusWanted = 'past';
         }
         $upsert($postedSY, $statusWanted);
 
@@ -380,6 +388,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <label for="grade_level" class="form-label">Grade Level</label>
                                         <select class="form-select" id="grade_level" name="grade_level" required>
                                             <option value="" disabled selected>Select Grade Level</option>
+                                            <option value="Nursery 1">Nursery 1</option>
+                                            <option value="Nursery 2">Nursery 2</option>
                                             <option value="Kindergarten">Kindergarten</option>
                                             <option value="Grade 1">Grade 1</option>
                                             <option value="Grade 2">Grade 2</option>
@@ -640,7 +650,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         const sectionsByGrade = {
-            'Kindergarten': [{
+            'Nursery 1': [{
                     value: 'Apple',
                     label: 'Apple'
                 },
@@ -653,7 +663,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     label: 'Avocado'
                 }
             ],
-            'Grade 1': [{
+            'Nursery 2': [{
                     value: 'Birch',
                     label: 'Birch'
                 },
@@ -666,7 +676,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     label: 'Bamboo'
                 }
             ],
-            'Grade 2': [{
+            'Kindergarten': [{
                     value: 'Cranberry',
                     label: 'Cranberry'
                 },
@@ -678,8 +688,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     value: 'Currant',
                     label: 'Currant'
                 }
-            ],
-            'Grade 3': [{
+                ],
+            'Grade 1': [{
                     value: 'Dolphin',
                     label: 'Dolphin'
                 },
@@ -691,8 +701,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     value: 'Dory',
                     label: 'Dory'
                 }
-            ],
-            'Grade 4': [{
+                ],
+            'Grade 2': [{
                     value: 'Elephant',
                     label: 'Elephant'
                 },
@@ -705,7 +715,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     label: 'Echidna'
                 }
             ],
-            'Grade 5': [{
+            'Grade 3': [{
                     value: 'Falcon',
                     label: 'Falcon'
                 },
@@ -718,7 +728,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     label: 'Fox'
                 }
             ],
-            'Grade 6': [{
+            'Grade 4': [{
                     value: 'Gardenia',
                     label: 'Gardenia'
                 },
@@ -729,6 +739,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 {
                     value: 'Gerbera',
                     label: 'Gerbera'
+                }
+            ],
+            'Grade 5': [{
+                value: 'Harlequin Bug',
+                label: 'Harlequin Bug'
+                },
+                {
+                value: 'Honeybee',
+                label: 'Honeybee'
+                },
+                {
+                value: 'Hornet',
+                label: 'Hornet'
+                }
+            ],
+            'Grade 6': [{
+                value: 'Ialtris',
+                label: 'Ialtris'
+                },{
+                value: 'Iguana',
+                label: 'Iguana'
+                },{
+                value: 'Indian Star Tortoise',
+                label: 'Indian Star Tortoise'
                 }
             ]
         };

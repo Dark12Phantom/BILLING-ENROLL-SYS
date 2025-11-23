@@ -64,8 +64,8 @@ if (empty($errors)) {
         // Insert into compliance_expenses
         $stmt = $pdo->prepare("
             INSERT INTO compliance_expenses 
-            (type, amount, payment_date, reference_number, period_covered, paid_by) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            (type, amount, payment_date, reference_number, period_covered, paid_by, description) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $type,

@@ -138,14 +138,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($postedSY === '') {
             $postedSY = $syCurrent;
         }
-        $startYear = (int)preg_replace('/\D.*/', '', $postedSY);
+        if (preg_match('/^\s*(\d{4})\s*[-–]\s*(\d{4})\s*$/', $postedSY, $m)) {
+            $startYear = (int)$m[1];
+            $endYear = (int)$m[2];
+        } else {
+            $startYear = $year;
+            $endYear = $year + 1;
+            $postedSY = $startYear . ' - ' . $endYear;
+        }
+        $today = new DateTime('now');
+        $schoolStart = new DateTime($startYear . '-06-01');
+        $nextSchoolStart = new DateTime(($startYear + 1) . '-06-01');
         $statusWanted = 'current';
-        if ($startYear === $year - 1) {
-            $statusWanted = 'past';
-        } elseif ($startYear === $year) {
-            $statusWanted = 'current';
-        } elseif ($startYear === $year + 1) {
+        if ($today < $schoolStart) {
             $statusWanted = 'pre-enrollment';
+        } elseif ($today >= $nextSchoolStart) {
+            $statusWanted = 'past';
         }
         $upsert($postedSY, $statusWanted);
 
