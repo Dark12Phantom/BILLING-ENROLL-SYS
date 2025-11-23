@@ -64,10 +64,9 @@ function protectPage()
         $june = new DateTime($today->format('Y') . '-06-01');
         if ($today >= $june) {
             $year = (int)$today->format('Y');
-            $syCurrent = $year . ' - ' . ($year + 1);
-            $syNext = ($year + 1) . ' - ' . ($year + 2);
+            $syPrev = ($year - 1) . ' - ' . $year;
             $updPast = $pdo->prepare("UPDATE enrollment_history SET status = 'past' WHERE school_year = ? AND status = 'current'");
-            $updPast->execute([$syCurrent]);
+            $updPast->execute([$syPrev]);
         }
     } catch (Exception $e) {}
 }
