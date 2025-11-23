@@ -181,8 +181,8 @@ require_once '../../../includes/header.php';
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="description" class="form-label">Amount</label>
-                        <textarea class="form-control" id="description" name="description" required>
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="amount" class="form-label">Amount</label>
