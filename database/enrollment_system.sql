@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Nov 19, 2025 at 03:24 PM
+-- Generation Time: Nov 23, 2025 at 12:48 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -51,7 +51,8 @@ CREATE TABLE `compliance_expenses` (
   `payment_date` date NOT NULL,
   `reference_number` varchar(100) DEFAULT NULL,
   `period_covered` varchar(100) DEFAULT NULL,
-  `paid_by` int(11) NOT NULL
+  `paid_by` int(11) NOT NULL,
+  `description` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
@@ -245,7 +246,7 @@ CREATE TABLE `user_tables` (
   `userID` int(11) DEFAULT NULL,
   `first_name` text NOT NULL,
   `last_name` text DEFAULT NULL,
-  `staff_id` int(11) DEFAULT NULL,
+  `staff_id` varchar(20) DEFAULT NULL,
   `user_type` text NOT NULL,
   `status` text DEFAULT NULL,
   `gender` text DEFAULT NULL,

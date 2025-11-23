@@ -15,6 +15,7 @@ $type = isset($_POST['type']) ? trim((string)$_POST['type']) : '';
 $amount = isset($_POST['amount']) && is_numeric($_POST['amount']) ? floatval($_POST['amount']) : 0;
 $paymentDate = $_POST['payment_date'];
 $referenceNumber = isset($_POST['reference_number']) ? trim($_POST['reference_number']) : '';
+$description = isset($_POST['description']) ? trim($_POST['description']) : '';
 $periodCovered = isset($_POST['period_covered']) ? trim($_POST['period_covered']) : '';
 $isRecurring = isset($_POST['is_recurring']) ? 1 : 0;
 $frequency = isset($_POST['frequency']) ? trim($_POST['frequency']) : '';
@@ -32,6 +33,10 @@ if (strlen($referenceNumber) > 50) {
     $errors[] = "Reference number must not exceed 50 characters.";
 } elseif (!preg_match('/^[A-Za-z0-9\-]+$/', $referenceNumber)) {
     $errors[] = "Reference number contains invalid characters.";
+}
+
+if (strlen($description) > 255) {
+    $errors[] = "Description must not exceed 255 characters.";
 }
 
 if (!in_array($type, ['Social Security System', 'Pag-IBIG', 'PhilHealth', 'Permit', 'Registration'])) {
@@ -61,7 +66,9 @@ if (empty($errors)) {
     try {
         $pdo->beginTransaction();
 
-        // Insert into compliance_expenses
+        if ($description === '') {
+            $description = "$type Payment for Period: $periodCovered";
+        }
         $stmt = $pdo->prepare("
             INSERT INTO compliance_expenses 
             (type, amount, payment_date, reference_number, period_covered, paid_by, description) 
@@ -73,7 +80,8 @@ if (empty($errors)) {
             $paymentDate,
             $referenceNumber,
             $periodCovered,
-            $paidBy
+            $paidBy,
+            $description
         ]);
 
         $complianceId = $pdo->lastInsertId();
