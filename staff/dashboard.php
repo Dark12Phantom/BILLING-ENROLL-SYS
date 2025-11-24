@@ -13,6 +13,7 @@ require_once 'includes/staff-header.php';
 </div>
 
 <div class="row">
+    <?php if ($userType === 'registrar'): ?>
     <div class="col-md-4 mb-4">
         <div class="card text-white bg-primary h-100">
             <div class="card-body">
@@ -27,7 +28,7 @@ require_once 'includes/staff-header.php';
         </div>
     </div>
     
-    <?php if ($userType === 'cashier'): ?>
+    <?php elseif ($userType === 'cashier'): ?>
     <div class="col-md-4 mb-4">
         <div class="card text-white bg-success h-100">
             <div class="card-body">
