@@ -66,7 +66,9 @@ if ($filterGrade) {
                 <div class="input-group" style="max-width: 400px;">
                     <input type="text" class="form-control" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>">
                     <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+                    <?php if ($userType === 'registrar') :?>
                     <a href="add.php" class="btn btn-success ms-2"><i class="fas fa-plus"></i> Add Student</a>
+                    <?php endif?>
                 </div>
                 <div class="ms-3">
                     <select name="grade_level" class="form-select" style="width: 200px;" onchange="this.form.submit()">
