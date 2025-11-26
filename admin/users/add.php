@@ -284,6 +284,7 @@ require_once '../../includes/header.php';
                                     </span>
                                 </div>
                                 <div class="form-text">Password must be at least 8 characters long</div>
+                                <div id="passwordStrength" class="form-text"></div>
                             </div>
 
                             <h5 class="section-title mt-4">Additional Information</h5>
@@ -310,7 +311,7 @@ require_once '../../includes/header.php';
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.getElementById('id_picture');
         const imagePreview = document.getElementById('imagePreview');
         const uploadArea = document.getElementById('uploadArea');
@@ -388,13 +389,31 @@ require_once '../../includes/header.php';
                 fileInput.dispatchEvent(event);
             }
         });
-
+        
         // Password toggle functionality
         togglePassword.addEventListener('click', function() {
             const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordField.setAttribute('type', type);
             this.querySelector('i').classList.toggle('fa-eye');
             this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+
+        function strengthText(pwd) {
+            if (!pwd) return '';
+            let s = 0; let fb = [];
+            if (pwd.length >= 8) s++; else fb.push('8+ chars');
+            if (/[A-Z]/.test(pwd)) s++; else fb.push('uppercase');
+            if (/[a-z]/.test(pwd)) s++; else fb.push('lowercase');
+            if (/\d/.test(pwd)) s++; else fb.push('number');
+            if (/[^A-Za-z0-9]/.test(pwd)) s++; else fb.push('special');
+            if (s < 3) return 'Weak – add ' + fb.slice(0,2).join(', ');
+            if (s < 4) return 'Medium – consider ' + fb.slice(0,1).join(', ');
+            return 'Strong';
+        }
+
+        const strengthEl = document.getElementById('passwordStrength');
+        document.getElementById('password').addEventListener('input', function(){
+            strengthEl.textContent = strengthText(this.value);
         });
 
         // Form validation

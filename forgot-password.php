@@ -14,8 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "All fields are required";
     } elseif ($new_password !== $confirm_password) {
         $error = "Passwords do not match";
-    } elseif (strlen($new_password) < 6) {
-        $error = "Password must be at least 6 characters long";
+    } elseif (strlen($new_password) < 8) {
+        $error = "Password must be at least 8 characters long";
     } elseif (strlen($new_username) < 3) {
         $error = "Username must be at least 3 characters long";
     } elseif (!preg_match('/^[a-zA-Z0-9_-]+$/', $new_username)) {

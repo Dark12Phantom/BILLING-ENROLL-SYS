@@ -18,15 +18,11 @@ if (isset($_SESSION['user_id'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
-    $captcha  = $_POST['captcha'] ?? '';
+    $captchaInput = $_POST['captcha'] ?? '';
 
-    if (!isset($_SESSION['captcha_answer']) || intval(trim($captcha)) !== $_SESSION['captcha_answer']) {
-        $error = "Incorrect CAPTCHA answer.";
-        $num1 = rand(1, 10);
-        $num2 = rand(1, 10);
-        $_SESSION['captcha_answer'] = $num1 + $num2;
-        $_SESSION['captcha_question'] = "What is $num1 + $num2?";
-    } else {
+    $captchaOk = isset($_SESSION['captcha_text']) && strtoupper(trim($captchaInput)) === $_SESSION['captcha_text'];
+
+    if ($captchaOk) {
         $stmt = $pdo->prepare("
             SELECT u.*, ut.user_type 
             FROM users u
@@ -57,19 +53,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = "Invalid username or password";
         }
-
-        $num1 = rand(1, 10);
-        $num2 = rand(1, 10);
-        $_SESSION['captcha_answer'] = $num1 + $num2;
-        $_SESSION['captcha_question'] = "What is $num1 + $num2?";
+    } else {
+        $error = 'Incorrect CAPTCHA.';
     }
 }
 
-if (!isset($_SESSION['captcha_answer'])) {
-    $num1 = rand(1, 10);
-    $num2 = rand(1, 10);
-    $_SESSION['captcha_answer'] = $num1 + $num2;
-    $_SESSION['captcha_question'] = "What is $num1 + $num2?";
+if (!isset($_SESSION['captcha_text'])) {
+    $_SESSION['captcha_text'] = '';
 }
 ?>
 <!DOCTYPE html>
@@ -227,14 +217,11 @@ if (!isset($_SESSION['captcha_answer'])) {
                                 </div>
                             </div>
 
-                            <!-- CAPTCHA -->
                             <div class="mb-4">
-                                <label for="captcha" class="form-label fw-bold">CAPTCHA</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-transparent">
-                                        <i class="fas fa-question-circle text-muted"></i>
-                                    </span>
-                                    <input type="text" class="form-control input-with-icon" id="captcha" name="captcha" placeholder="<?php echo $_SESSION['captcha_question']; ?>" required>
+                                <label class="form-label fw-bold">CAPTCHA</label>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="captcha.php?ts=<?php echo time(); ?>" alt="Captcha" style="height:50px;" />
+                                    <input type="text" class="form-control" name="captcha" placeholder="Enter text" required style="max-width:200px;" />
                                 </div>
                             </div>
 

@@ -137,7 +137,7 @@ require_once '../../includes/header.php';
                                 </tr>
                             </table>
                         <?php else: ?>
-                            <div class="alert alert-warning">No parent/guardian information found.</div>
+                            <div class="alert alert-warning">No emergency contact information found.</div>
                         <?php endif; ?>
                     </div>
                 </div>
