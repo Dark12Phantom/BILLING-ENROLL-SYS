@@ -19,6 +19,25 @@ $query = "SELECT ut.*, u.last_login, u.role
           ORDER BY ut.last_name, ut.first_name";
 $params = ["%$search%", "%$search%", "%$search%", "%$search%"];
 
+$page = max(1, intval($_GET['page'] ?? 1));
+$limit = 15;
+$offset = ($page - 1) * $limit;
+
+// Count total
+$countQuery = "SELECT COUNT(*) 
+          FROM user_tables ut
+          LEFT JOIN users u ON ut.userID = u.id
+          WHERE (ut.first_name LIKE ? 
+              OR ut.last_name LIKE ? 
+              OR ut.staff_id LIKE ? 
+              OR ut.user_type LIKE ?)
+          AND COALESCE(ut.user_type, u.role) <> 'system'";
+$countStmt = $pdo->prepare($countQuery);
+$countStmt->execute($params);
+$totalRows = intval($countStmt->fetchColumn());
+$totalPages = max(1, (int)ceil($totalRows / $limit));
+
+$query .= " LIMIT $limit OFFSET $offset";
 $stmt = $pdo->prepare($query);
 $stmt->execute($params);
 $users = $stmt->fetchAll();
@@ -89,6 +108,21 @@ $users = $stmt->fetchAll();
                 </div>
             </div>
         </div>
+        <nav>
+            <ul class="pagination justify-content-center">
+                <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => max(1, $page-1)])) ?>">Previous</a>
+                </li>
+                <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                    <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                        <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $p])) ?>"><?= $p ?></a>
+                    </li>
+                <?php endfor; ?>
+                <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => min($totalPages, $page+1)])) ?>">Next</a>
+                </li>
+            </ul>
+        </nav>
     </div>
 </div>
 

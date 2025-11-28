@@ -2,15 +2,25 @@
 require_once '../../../includes/auth.php';
 protectPage();
 
-$stmt = $pdo->query("SELECT * FROM fees ORDER BY name");
+$limit = 15;
+$pageTypes = max(1, intval($_GET['types_page'] ?? 1));
+$pageAssigned = max(1, intval($_GET['assigned_page'] ?? 1));
+$offsetTypes = ($pageTypes - 1) * $limit;
+$totalTypes = intval($pdo->query("SELECT COUNT(*) FROM fees")->fetchColumn());
+$totalTypesPages = max(1, (int)ceil($totalTypes / $limit));
+$stmt = $pdo->query("SELECT * FROM fees ORDER BY name LIMIT $limit OFFSET $offsetTypes");
 $feeTypes = $stmt->fetchAll();
 
+$offsetAssigned = ($pageAssigned - 1) * $limit;
+$totalAssigned = intval($pdo->query("SELECT COUNT(*) FROM student_fees")->fetchColumn());
+$totalAssignedPages = max(1, (int)ceil($totalAssigned / $limit));
 $query = "SELECT sf.*, f.name as fee_name, s.first_name, s.last_name, s.student_id 
           FROM student_fees sf 
           JOIN fees f ON sf.fee_id = f.id 
           JOIN students s ON sf.student_id = s.id 
           WHERE s.isDeleted = '0'
-          ORDER BY sf.due_date DESC";
+          ORDER BY sf.due_date DESC
+          LIMIT $limit OFFSET $offsetAssigned";
 $stmt = $pdo->query($query);
 $studentFees = $stmt->fetchAll();
 
@@ -75,6 +85,21 @@ require_once '../../../includes/header.php';
                             <?php if (empty($feeTypes)): ?>
                                 <p class="text-center text-muted mt-3">No fee types found.</p>
                             <?php endif; ?>
+                            <nav>
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item <?= ($pageTypes <= 1) ? 'disabled' : '' ?>">
+                                        <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['types_page' => max(1, $pageTypes-1)])) ?>">Previous</a>
+                                    </li>
+                                    <?php for ($p = 1; $p <= $totalTypesPages; $p++): ?>
+                                        <li class="page-item <?= ($p === $pageTypes) ? 'active' : '' ?>">
+                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['types_page' => $p])) ?>"><?= $p ?></a>
+                                        </li>
+                                    <?php endfor; ?>
+                                    <li class="page-item <?= ($pageTypes >= $totalTypesPages) ? 'disabled' : '' ?>">
+                                        <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['types_page' => min($totalTypesPages, $pageTypes+1)])) ?>">Next</a>
+                                    </li>
+                                </ul>
+                            </nav>
                         </div>
                     </div>
                 </div>
@@ -126,6 +151,21 @@ require_once '../../../includes/header.php';
                                 <?php endif; ?>
                             </table>
                         </div>
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item <?= ($pageAssigned <= 1) ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['assigned_page' => max(1, $pageAssigned-1)])) ?>">Previous</a>
+                                </li>
+                                <?php for ($p = 1; $p <= $totalAssignedPages; $p++): ?>
+                                    <li class="page-item <?= ($p === $pageAssigned) ? 'active' : '' ?>">
+                                        <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['assigned_page' => $p])) ?>"><?= $p ?></a>
+                                    </li>
+                                <?php endfor; ?>
+                                <li class="page-item <?= ($pageAssigned >= $totalAssignedPages) ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['assigned_page' => min($totalAssignedPages, $pageAssigned+1)])) ?>">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>

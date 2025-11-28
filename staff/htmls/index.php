@@ -45,6 +45,25 @@ if ($filterGrade === "__ARCHIVED__") {
 
     $query .= " ORDER BY grade_level, last_name, first_name";
 
+    $page = max(1, intval($_GET['page'] ?? 1));
+    $limit = 15;
+    $offset = ($page - 1) * $limit;
+
+    // Count total
+    $countSql = "SELECT COUNT(*) FROM students WHERE isDeleted = 0 AND (
+        first_name LIKE ? OR last_name LIKE ? OR student_id LIKE ? OR grade_level LIKE ? OR section LIKE ?
+    )";
+    $countParams = $params;
+    if (!empty($filterGrade)) {
+        $countSql .= " AND grade_level = ?";
+        $countParams[] = $filterGrade;
+    }
+    $countStmt = $pdo->prepare($countSql);
+    $countStmt->execute($countParams);
+    $totalRows = intval($countStmt->fetchColumn());
+    $totalPages = max(1, (int)ceil($totalRows / $limit));
+
+    $query .= " LIMIT $limit OFFSET $offset";
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
     $students = $stmt->fetchAll();
@@ -135,6 +154,21 @@ if ($filterGrade) {
                 </div>
             </div>
         </div>
+        <nav>
+            <ul class="pagination justify-content-center">
+                <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => max(1, $page-1)])) ?>">Previous</a>
+                </li>
+                <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                    <li class="page-item <?= ($p === $page) ? 'active' : '' ?>">
+                        <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $p])) ?>"><?= $p ?></a>
+                    </li>
+                <?php endfor; ?>
+                <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => min($totalPages, $page+1)])) ?>">Next</a>
+                </li>
+            </ul>
+        </nav>
     </div>
 </div>
 

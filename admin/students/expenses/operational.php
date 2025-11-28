@@ -76,12 +76,10 @@ require_once '../../../includes/header.php';
                                     <td>₱<?= number_format($expense['amount'], 2) ?></td>
                                     <td><?= htmlspecialchars($expense['approved_by_name']) ?></td>
                                     <td>
-                                        <?php if (!empty($expense['id'])): ?>
-                                            <a href="./view-receipt.php?id=<?= htmlspecialchars($expense['id']) ?>&type=operational" target="_blank" class="btn btn-sm btn-info">
-                                                View
-                                            </a>
+                                        <?php if (!empty($expense['evidence'])): ?>
+                                            <a href="view-evidence.php?id=<?= htmlspecialchars($expense['id']) ?>" target="_blank" class="btn btn-sm btn-info">View</a>
                                         <?php else: ?>
-                                            N/A
+                                            <a href="./view-receipt.php?id=<?= htmlspecialchars($expense['id']) ?>&type=operational" target="_blank" class="btn btn-sm btn-secondary">View Receipt</a>
                                         <?php endif; ?>
                                     </td>
                                     <td>

@@ -33,7 +33,30 @@ if (!empty($endDate)) {
     $params[] = $endDate;
 }
 
-$query .= " ORDER BY p.payment_date DESC";
+$page = max(1, intval($_GET['page'] ?? 1));
+$limit = 15;
+$offset = ($page - 1) * $limit;
+
+// Count total with same filters
+$countSql = "SELECT COUNT(*) 
+          FROM payments p 
+          JOIN students s ON p.student_id = s.id 
+          WHERE 1=1";
+$countParams = [];
+if (!empty($search)) {
+    $countSql .= " AND (s.first_name LIKE ? OR s.last_name LIKE ? OR s.student_id LIKE ? OR p.reference_number LIKE ?)";
+    $countParams = array_merge($countParams, ["%$search%", "%$search%", "%$search%", "%$search%"]); 
+}
+if (!empty($studentId)) { $countSql .= " AND p.student_id = ?"; $countParams[] = $studentId; }
+if (!empty($startDate)) { $countSql .= " AND p.payment_date >= ?"; $countParams[] = $startDate; }
+if (!empty($endDate)) { $countSql .= " AND p.payment_date <= ?"; $countParams[] = $endDate; }
+
+$countStmt = $pdo->prepare($countSql);
+$countStmt->execute($countParams);
+$totalRows = intval($countStmt->fetchColumn());
+$totalPages = max(1, (int)ceil($totalRows / $limit));
+
+$query .= " ORDER BY p.payment_date DESC LIMIT $limit OFFSET $offset";
 $stmt = $pdo->prepare($query);
 $stmt->execute($params);
 $payments = $stmt->fetchAll();
@@ -149,8 +172,23 @@ require_once '../../../includes/header.php';
                 </div>
             </div>
 
-            <div class="card-footer d-flex justify-content-between">
+            <div class="card-footer d-flex justify-content-between align-items-center">
                 <span><strong>System Total:</strong> ₱<?= number_format($totalAmount ?? 0, 2) ?></span>
+                <nav>
+                    <ul class="pagination mb-0">
+                        <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => max(1, $page-1)])) ?>">Previous</a>
+                        </li>
+                        <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+                            <li class="page-item <?= ($p === $page) ? 'active' : '' ?>">
+                                <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $p])) ?>"><?= $p ?></a>
+                            </li>
+                        <?php endfor; ?>
+                        <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => min($totalPages, $page+1)])) ?>">Next</a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
