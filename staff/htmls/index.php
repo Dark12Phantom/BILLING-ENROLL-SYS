@@ -9,8 +9,8 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
 $filterGrade = isset($_GET['grade_level']) ? $_GET['grade_level'] : '';
 
 $gradeQuery = $pdo->query("SELECT DISTINCT grade_level 
-                           FROM students 
-                           WHERE isDeleted = 0
+                           FROM enrollment_history 
+                           WHERE status = 'current'
                            ORDER BY grade_level ASC");
 $gradeLevels = $gradeQuery->fetchAll(PDO::FETCH_COLUMN);
 
@@ -28,7 +28,7 @@ if ($filterGrade === "__ARCHIVED__") {
 
     $query = "SELECT * FROM students 
               WHERE isDeleted = 1
-              ORDER BY grade_level, last_name, first_name
+              ORDER BY last_name, first_name
               LIMIT $limit OFFSET $offset";
 
     $stmt = $pdo->prepare($query);
@@ -37,34 +37,37 @@ if ($filterGrade === "__ARCHIVED__") {
 } else {
 
     // NORMAL QUERY: only active students
-    $query = "SELECT * FROM students 
-              WHERE isDeleted = 0 
+    $query = "SELECT s.*, eh.grade_level FROM students s
+              LEFT JOIN enrollment_history eh ON eh.student_id = s.id AND eh.status = 'current'
+              WHERE s.isDeleted = 0 
               AND (
-                   first_name LIKE ? OR
-                   last_name LIKE ? OR
-                   student_id LIKE ? OR
-                   grade_level LIKE ? OR
-                   section LIKE ?
+                   s.first_name LIKE ? OR
+                   s.last_name LIKE ? OR
+                   s.student_id LIKE ? OR
+                   eh.grade_level LIKE ? OR
+                   s.section LIKE ?
               )";
 
     $params = ["%$search%", "%$search%", "%$search%", "%$search%", "%$search%"];
 
     if (!empty($filterGrade)) {
-        $query .= " AND grade_level = ?";
+        $query .= " AND eh.grade_level = ?";
         $params[] = $filterGrade;
     }
 
-    $query .= " ORDER BY grade_level, last_name, first_name";
+    $query .= " ORDER BY eh.grade_level, s.last_name, s.first_name";
 
     // pagination variables already defined
 
     // Count total
-    $countSql = "SELECT COUNT(*) FROM students WHERE isDeleted = 0 AND (
-        first_name LIKE ? OR last_name LIKE ? OR student_id LIKE ? OR grade_level LIKE ? OR section LIKE ?
-    )";
+    $countSql = "SELECT COUNT(*) FROM students s 
+                 LEFT JOIN enrollment_history eh ON eh.student_id = s.id AND eh.status = 'current'
+                 WHERE s.isDeleted = 0 AND (
+                    s.first_name LIKE ? OR s.last_name LIKE ? OR s.student_id LIKE ? OR eh.grade_level LIKE ? OR s.section LIKE ?
+                 )";
     $countParams = $params;
     if (!empty($filterGrade)) {
-        $countSql .= " AND grade_level = ?";
+        $countSql .= " AND eh.grade_level = ?";
         $countParams[] = $filterGrade;
     }
     $countStmt = $pdo->prepare($countSql);
@@ -135,7 +138,7 @@ if ($filterGrade === "__ARCHIVED__") {
                                     <tr>
                                         <td><?= htmlspecialchars($student['student_id']) ?></td>
                                         <td><?= htmlspecialchars($student['last_name']) ?>, <?= htmlspecialchars($student['first_name']) ?></td>
-                                        <td><?= htmlspecialchars($student['grade_level']) ?></td>
+                                        <td><?= htmlspecialchars($student['grade_level'] ?? 'N/A') ?></td>
                                         <td><?= htmlspecialchars($student['section']) ?></td>
                                         <td>
                                             <span class="badge bg-<?=

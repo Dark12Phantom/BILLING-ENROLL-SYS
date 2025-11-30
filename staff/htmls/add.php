@@ -46,7 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'gender' => $_POST['gender'],
         'address' => $_POST['address'],
         'mobile_number' => $_POST['mobile_number'],
-        'grade_level' => $_POST['grade_level'],
         'section' => $_POST['section'],
         'createdBy' => $createdBy
     ];
@@ -109,8 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo->beginTransaction();
 
-        $stmt = $pdo->prepare("INSERT INTO students (student_id, first_name, last_name, date_of_birth, gender, address, mobile_number, grade_level, section, idPicturePath, createdBy) 
-                              VALUES (:student_id, :first_name, :last_name, :date_of_birth, :gender, :address, :mobile_number, :grade_level, :section, :idPicturePath, :createdBy)");
+        $stmt = $pdo->prepare("INSERT INTO students (student_id, first_name, last_name, date_of_birth, gender, address, mobile_number, section, idPicturePath, createdBy) 
+                              VALUES (:student_id, :first_name, :last_name, :date_of_birth, :gender, :address, :mobile_number, :section, :idPicturePath, :createdBy)");
         $stmt->execute($studentData);
         $studentId = $pdo->lastInsertId();
 
@@ -121,16 +120,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $studentEnrollmentData['student_id'] = $studentId;
 
-        $upsert = function($sy, $status) use ($pdo, $studentId) {
+        $gradeLevelPosted = trim($_POST['grade_level'] ?? '');
+
+        $upsert = function($sy, $status, $gradeLevel) use ($pdo, $studentId) {
             $check = $pdo->prepare("SELECT id FROM enrollment_history WHERE student_id = ? AND school_year = ? LIMIT 1");
             $check->execute([$studentId, $sy]);
             $existingId = $check->fetchColumn();
             if ($existingId) {
-                $upd = $pdo->prepare("UPDATE enrollment_history SET status = ? WHERE id = ?");
-                $upd->execute([$status, $existingId]);
+                $upd = $pdo->prepare("UPDATE enrollment_history SET status = ?, grade_level = ? WHERE id = ?");
+                $upd->execute([$status, $gradeLevel, $existingId]);
             } else {
-                $ins = $pdo->prepare("INSERT INTO enrollment_history (student_id, school_year, status) VALUES (?, ?, ?)");
-                $ins->execute([$studentId, $sy, $status]);
+                $ins = $pdo->prepare("INSERT INTO enrollment_history (student_id, school_year, status, grade_level) VALUES (?, ?, ?, ?)");
+                $ins->execute([$studentId, $sy, $status, $gradeLevel]);
             }
         };
 
@@ -155,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($today >= $nextSchoolStart) {
             $statusWanted = 'past';
         }
-        $upsert($postedSY, $statusWanted);
+        $upsert($postedSY, $statusWanted, $gradeLevelPosted);
 
         $parentData['student_id'] = $studentId;
         $stmt = $pdo->prepare("INSERT INTO parents (student_id, first_name, last_name, relationship, mobile_number, email, address) 

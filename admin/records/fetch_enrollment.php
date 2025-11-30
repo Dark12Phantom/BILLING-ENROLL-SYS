@@ -19,7 +19,7 @@ $sql = "
         s.student_id,
         s.first_name,
         s.last_name,
-        s.grade_level,
+        eh.grade_level,
         s.section,
         s.status,
         eh.school_year AS schoolYear,

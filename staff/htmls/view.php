@@ -9,7 +9,9 @@ if (!isset($_GET['id'])) {
 
 $studentId = $_GET['id'];
 
-$stmt = $pdo->prepare("SELECT * FROM students WHERE id = ?");
+$stmt = $pdo->prepare("SELECT s.*, eh.grade_level FROM students s 
+                       LEFT JOIN enrollment_history eh ON eh.student_id = s.id AND eh.status = 'current'
+                       WHERE s.id = ?");
 $stmt->execute([$studentId]);
 $student = $stmt->fetch();
 
@@ -86,7 +88,7 @@ require_once '../includes/staff-header.php';
                             </tr>
                             <tr>
                                 <th>Grade Level:</th>
-                                <td><?= htmlspecialchars($student['grade_level']) ?></td>
+                                <td><?= htmlspecialchars($student['grade_level'] ?? 'N/A') ?></td>
                             </tr>
                             <tr>
                                 <th>Section:</th>

@@ -11,7 +11,9 @@ if (!isset($_GET['id'])) {
 
 $studentId = $_GET['id'];
 
-$stmt = $pdo->prepare("SELECT * FROM students WHERE id = ?");
+$stmt = $pdo->prepare("SELECT s.*, eh.grade_level FROM students s 
+                       LEFT JOIN enrollment_history eh ON eh.student_id = s.id AND eh.status = 'current'
+                       WHERE s.id = ?");
 $stmt->execute([$studentId]);
 $student = $stmt->fetch();
 
@@ -41,7 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'gender' => $_POST['gender'],
         'address' => trim($_POST['address']),
         'mobile_number' => trim($_POST['mobile_number']),
-        'grade_level' => trim($_POST['grade_level']),
         'section' => trim($_POST['section']),
         'status' => $_POST['status'],
         'lastUpdated' => $today,
@@ -73,7 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Date of birth is required.";
     }
 
-    if (empty($studentData['grade_level'])) {
+    $gradeLevelPosted = trim($_POST['grade_level'] ?? '');
+    if (empty($gradeLevelPosted)) {
         $errors[] = "Grade level is required.";
     }
 
@@ -127,7 +129,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                       gender = :gender,
                                       address = :address,
                                       mobile_number = :mobile_number,
-                                      grade_level = :grade_level,
                                       section = :section,
                                       status = :status,
                                       idPicturePath = :idPicturePath,
@@ -143,7 +144,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                       gender = :gender,
                                       address = :address,
                                       mobile_number = :mobile_number,
-                                      grade_level = :grade_level,
                                       section = :section,
                                       status = :status,
                                       lastUpdated = :lastUpdated,
@@ -159,25 +159,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $syNext = ($year + 1) . ' - ' . ($year + 2);
             $postedSY = $studentEnrollmentData['schoolYear'] ?? null;
 
-            $upsert = function($sy, $status) use ($pdo, $studentId) {
+            $upsert = function($sy, $status, $gradeLevel = null) use ($pdo, $studentId) {
                 $stmt = $pdo->prepare("SELECT id, status FROM enrollment_history WHERE student_id = ? AND school_year = ? LIMIT 1");
                 $stmt->execute([$studentId, $sy]);
                 $row = $stmt->fetch();
                 if ($row && isset($row['id'])) {
-                    if ($row['status'] !== $status) {
-                        $upd = $pdo->prepare("UPDATE enrollment_history SET status = ? WHERE id = ?");
-                        $upd->execute([$status, $row['id']]);
+                    if ($gradeLevel === null) {
+                        if ($row['status'] !== $status) {
+                            $upd = $pdo->prepare("UPDATE enrollment_history SET status = ? WHERE id = ?");
+                            $upd->execute([$status, $row['id']]);
+                        }
+                    } else {
+                        $upd = $pdo->prepare("UPDATE enrollment_history SET status = ?, grade_level = ? WHERE id = ?");
+                        $upd->execute([$status, $gradeLevel, $row['id']]);
                     }
                 } else {
-                    $ins = $pdo->prepare("INSERT INTO enrollment_history (student_id, school_year, status) VALUES (?, ?, ?)");
-                    $ins->execute([$studentId, $sy, $status]);
+                    if ($gradeLevel === null) {
+                        $ins = $pdo->prepare("INSERT INTO enrollment_history (student_id, school_year, status) VALUES (?, ?, ?)");
+                        $ins->execute([$studentId, $sy, $status]);
+                    } else {
+                        $ins = $pdo->prepare("INSERT INTO enrollment_history (student_id, school_year, status, grade_level) VALUES (?, ?, ?, ?)");
+                        $ins->execute([$studentId, $sy, $status, $gradeLevel]);
+                    }
                 }
             };
 
+            // Update statuses for timeline; set grade level only on posted school year
             $upsert($syPast, 'past');
-            $upsert($syCurrent, 'current');
+            $upsert($syCurrent, 'current', ($postedSY === $syCurrent) ? $gradeLevelPosted : null);
             if ($postedSY === $syNext) {
-                $upsert($syNext, 'pre-enrollment');
+                $upsert($syNext, 'pre-enrollment', $gradeLevelPosted);
             }
 
             if ($parent) {
@@ -401,7 +412,7 @@ require_once '../../includes/header.php';
                     <div class="mb-3">
                         <label for="grade_level" class="form-label">Grade Level</label>
                         <input type="text" class="form-control" id="grade_level" name="grade_level"
-                            value="<?= htmlspecialchars($student['grade_level']) ?>" required>
+                            value="<?= htmlspecialchars($student['grade_level'] ?? '') ?>" required>
                     </div>
                     <div class="mb-3">
                         <label for="section" class="form-label">Section</label>

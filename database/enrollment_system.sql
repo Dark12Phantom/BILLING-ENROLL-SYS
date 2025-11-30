@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Nov 23, 2025 at 12:48 PM
+-- Generation Time: Nov 30, 2025 at 03:55 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -80,7 +80,8 @@ CREATE TABLE `enrollment_history` (
   `student_id` int(11) NOT NULL,
   `school_year` text NOT NULL,
   `status` text NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `grade_level` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -193,7 +194,6 @@ CREATE TABLE `students` (
   `gender` enum('Male','Female','Other') NOT NULL,
   `address` text NOT NULL,
   `mobile_number` varchar(20) DEFAULT NULL,
-  `grade_level` varchar(20) DEFAULT NULL,
   `section` varchar(20) DEFAULT NULL,
   `status` enum('Active','Inactive','Graduated') DEFAULT 'Active',
   `created_at` timestamp NULL DEFAULT current_timestamp(),
