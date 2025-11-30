@@ -14,11 +14,22 @@ $gradeQuery = $pdo->query("SELECT DISTINCT grade_level
                            ORDER BY grade_level ASC");
 $gradeLevels = $gradeQuery->fetchAll(PDO::FETCH_COLUMN);
 
+// Pagination defaults
+$page = max(1, intval($_GET['page'] ?? 1));
+$limit = 15;
+$offset = ($page - 1) * $limit;
+
 if ($filterGrade === "__ARCHIVED__") {
+
+    // Archived list with pagination
+    $countStmt = $pdo->query("SELECT COUNT(*) FROM students WHERE isDeleted = 1");
+    $totalRows = intval($countStmt->fetchColumn());
+    $totalPages = max(1, (int)ceil($totalRows / $limit));
 
     $query = "SELECT * FROM students 
               WHERE isDeleted = 1
-              ORDER BY grade_level, last_name, first_name";
+              ORDER BY grade_level, last_name, first_name
+              LIMIT $limit OFFSET $offset";
 
     $stmt = $pdo->prepare($query);
     $stmt->execute();
@@ -45,9 +56,7 @@ if ($filterGrade === "__ARCHIVED__") {
 
     $query .= " ORDER BY grade_level, last_name, first_name";
 
-    $page = max(1, intval($_GET['page'] ?? 1));
-    $limit = 15;
-    $offset = ($page - 1) * $limit;
+    // pagination variables already defined
 
     // Count total
     $countSql = "SELECT COUNT(*) FROM students WHERE isDeleted = 0 AND (
@@ -67,11 +76,6 @@ if ($filterGrade === "__ARCHIVED__") {
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
     $students = $stmt->fetchAll();
-}
-
-if ($filterGrade) {
-    $query .= " AND grade_level = ?";
-    $params[] = $filterGrade;
 }
 ?>
 
