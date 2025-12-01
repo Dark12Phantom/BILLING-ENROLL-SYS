@@ -65,7 +65,7 @@ if ($filterGrade === "__ARCHIVED__") {
                  WHERE s.isDeleted = 0 AND (
                     s.first_name LIKE ? OR s.last_name LIKE ? OR s.student_id LIKE ? OR eh.grade_level LIKE ? OR s.section LIKE ?
                  )";
-    $countParams = $params;
+    $countParams = ["%$search%", "%$search%", "%$search%", "%$search%", "%$search%"];
     if (!empty($filterGrade)) {
         $countSql .= " AND eh.grade_level = ?";
         $countParams[] = $filterGrade;
